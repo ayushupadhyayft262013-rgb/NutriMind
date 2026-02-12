@@ -179,6 +179,7 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
             chat_id,
             "*🤖 NutriMind Commands:*\n\n"
             "/start — Setup or restart\n"
+            "/set\\_targets — View or change daily targets\n"
             "/start\\_tracking — Resume logging\n"
             "/stop\\_tracking — Pause logging\n"
             "/today — Today's nutrition summary\n"
@@ -242,6 +243,88 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
             )
         else:
             await tg.send_message(chat_id, "You haven't set up your profile yet. Use /start")
+
+    elif command.startswith("/set_targets"):
+        profile = await db.get_user_profile(user_id)
+        if not profile or not profile.get("onboarded"):
+            await tg.send_message(chat_id, "Complete onboarding first with /start")
+            return
+
+        parts = command.split()
+        if len(parts) == 1:
+            # No args — show current targets and usage
+            await tg.send_message(
+                chat_id,
+                f"🎯 *Your Current Targets:*\n\n"
+                f"Calories: *{profile['target_kcal']}* kcal\n"
+                f"Protein: *{profile['target_protein']}*g\n"
+                f"Carbs: *{profile['target_carbs']}*g\n"
+                f"Fats: *{profile['target_fats']}*g\n\n"
+                f"*To change, use:*\n"
+                f"`/set_targets 2000 150 200 60`\n"
+                f"_(kcal protein carbs fats)_\n\n"
+                f"Or set individually:\n"
+                f"`/set_targets kcal 2000`\n"
+                f"`/set_targets protein 150`\n"
+                f"`/set_targets carbs 200`\n"
+                f"`/set_targets fats 60`",
+            )
+        elif len(parts) == 5:
+            # Set all four: /set_targets 2000 150 200 60
+            try:
+                kcal = int(parts[1])
+                protein = int(parts[2])
+                carbs = int(parts[3])
+                fats = int(parts[4])
+                await db.upsert_user_profile(
+                    user_id,
+                    target_kcal=kcal,
+                    target_protein=protein,
+                    target_carbs=carbs,
+                    target_fats=fats,
+                )
+                await tg.send_message(
+                    chat_id,
+                    f"✅ *Targets updated!*\n\n"
+                    f"Calories: *{kcal}* kcal\n"
+                    f"Protein: *{protein}*g\n"
+                    f"Carbs: *{carbs}*g\n"
+                    f"Fats: *{fats}*g",
+                )
+            except ValueError:
+                await tg.send_message(chat_id, "❌ All values must be numbers.\nUsage: `/set_targets 2000 150 200 60`")
+        elif len(parts) == 3:
+            # Set individual: /set_targets kcal 2000
+            target_name = parts[1].lower()
+            try:
+                value = int(parts[2])
+            except ValueError:
+                await tg.send_message(chat_id, "❌ Value must be a number.")
+                return
+
+            field_map = {
+                "kcal": "target_kcal",
+                "calories": "target_kcal",
+                "cal": "target_kcal",
+                "protein": "target_protein",
+                "carbs": "target_carbs",
+                "fats": "target_fats",
+                "fat": "target_fats",
+            }
+
+            if target_name not in field_map:
+                await tg.send_message(chat_id, "❌ Unknown target. Use: `kcal`, `protein`, `carbs`, or `fats`")
+                return
+
+            await db.upsert_user_profile(user_id, **{field_map[target_name]: value})
+            await tg.send_message(chat_id, f"✅ *{target_name.capitalize()}* target set to *{value}*{'g' if target_name != 'kcal' and target_name != 'calories' and target_name != 'cal' else ' kcal'}")
+        else:
+            await tg.send_message(
+                chat_id,
+                "❌ Invalid format.\n\n"
+                "Use: `/set_targets 2000 150 200 60`\n"
+                "Or: `/set_targets protein 150`",
+            )
 
     elif command == "/preferences":
         prefs = await db.get_user_preferences(user_id)
