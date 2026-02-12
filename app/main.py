@@ -39,7 +39,11 @@ async def lifespan(app: FastAPI):
     # Set Telegram webhook
     if settings.TELEGRAM_BOT_TOKEN:
         webhook_url = f"{settings.WEBHOOK_BASE_URL}/webhook/telegram"
-        result = await tg.set_webhook(webhook_url)
+        # Upload self-signed cert if available (for IP-based HTTPS webhooks)
+        import os
+        cert_path = os.environ.get("SSL_CERTFILE", "certs/cert.pem")
+        cert_to_upload = cert_path if os.path.exists(cert_path) else None
+        result = await tg.set_webhook(webhook_url, certificate_path=cert_to_upload)
         logger.info(f"📡 Telegram webhook: {result}")
     else:
         logger.warning("⚠️  No TELEGRAM_BOT_TOKEN — webhook not set")

@@ -4,14 +4,19 @@ services:
     container_name: nutrimind
     restart: unless-stopped
     ports:
+      - "8443:8443"
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - SQLITE_DB_PATH=/app/data/nutrimind.db
+      - SSL_CERTFILE=/app/certs/cert.pem
+      - SSL_KEYFILE=/app/certs/key.pem
     volumes:
       # Persist SQLite database across container rebuilds
       - nutrimind_data:/app/data
-    environment:
-      - SQLITE_DB_PATH=/app/data/nutrimind.db
+      # Mount SSL certificates from host
+      - ./certs:/app/certs:ro
 
 volumes:
   nutrimind_data:

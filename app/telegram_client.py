@@ -37,9 +37,19 @@ async def download_file(file_path: str) -> bytes:
         return resp.content
 
 
-async def set_webhook(url: str) -> dict:
-    """Set the Telegram webhook URL."""
+async def set_webhook(url: str, certificate_path: str = None) -> dict:
+    """Set the Telegram webhook URL, optionally uploading a self-signed certificate."""
     async with httpx.AsyncClient() as client:
+        if certificate_path:
+            # Multipart upload with certificate file
+            import os
+            if os.path.exists(certificate_path):
+                with open(certificate_path, "rb") as cert_file:
+                    files = {"certificate": ("cert.pem", cert_file, "application/x-pem-file")}
+                    data = {"url": url, "allowed_updates": '["message"]'}
+                    resp = await client.post(f"{BASE_URL}/setWebhook", data=data, files=files)
+                    return resp.json()
+        # Standard JSON request (no certificate)
         payload = {"url": url, "allowed_updates": ["message"]}
         resp = await client.post(f"{BASE_URL}/setWebhook", json=payload)
         return resp.json()
