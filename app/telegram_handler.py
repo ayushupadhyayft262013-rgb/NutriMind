@@ -251,6 +251,7 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
             return
 
         parts = command.split()
+        logger.info(f"set_targets: parts={parts}, len={len(parts)}")
         if len(parts) == 1:
             # No args — show current targets and usage
             await tg.send_message(
