@@ -22,6 +22,8 @@ class NotionService:
             title=[{"type": "text", "text": {"content": "🍽️ NutriMind Daily Log"}}],
             properties={
                 "Date": {"title": {}},
+                "User ID": {"rich_text": {}},
+                "User Name": {"rich_text": {}},
                 "Total Kcal": {"number": {"format": "number"}},
                 "Target Kcal": {"number": {"format": "number"}},
                 "Total Protein": {"number": {"format": "number"}},
@@ -44,27 +46,50 @@ class NotionService:
         logger.info(f"Created Notion Daily Log DB: {db_id}")
         return db_id
 
-    async def get_or_create_daily_page(self, day: date, target_kcal: int = 1800) -> str:
-        """Get today's page or create it. Returns page_id."""
-        date_str = day.isoformat()
+    async def migrate_add_user_properties(self) -> bool:
+        """Add User ID and User Name properties to an existing database (one-time migration)."""
+        try:
+            await self.client.databases.update(
+                database_id=self.db_id,
+                properties={
+                    "User ID": {"rich_text": {}},
+                    "User Name": {"rich_text": {}},
+                },
+            )
+            logger.info("✅ Migrated Notion DB: added User ID and User Name properties")
+            return True
+        except Exception as e:
+            logger.error(f"Migration failed: {e}", exc_info=True)
+            return False
 
-        # Search for existing page
+    async def get_or_create_daily_page(
+        self, day: date, user_id: int, user_name: str = "Unknown", target_kcal: int = 1800
+    ) -> str:
+        """Get today's page for a specific user, or create it. Returns page_id."""
+        date_str = day.isoformat()
+        user_id_str = str(user_id)
+
+        # Search for existing page matching date AND user
         response = await self.client.databases.query(
             database_id=self.db_id,
             filter={
-                "property": "Date",
-                "title": {"equals": date_str},
+                "and": [
+                    {"property": "Date", "title": {"equals": date_str}},
+                    {"property": "User ID", "rich_text": {"equals": user_id_str}},
+                ]
             },
         )
 
         if response["results"]:
             return response["results"][0]["id"]
 
-        # Create new daily page
+        # Create new daily page for this user
         new_page = await self.client.pages.create(
             parent={"database_id": self.db_id},
             properties={
                 "Date": {"title": [{"text": {"content": date_str}}]},
+                "User ID": {"rich_text": [{"text": {"content": user_id_str}}]},
+                "User Name": {"rich_text": [{"text": {"content": user_name}}]},
                 "Total Kcal": {"number": 0},
                 "Target Kcal": {"number": target_kcal},
                 "Total Protein": {"number": 0},
@@ -83,7 +108,7 @@ class NotionService:
                     "object": "block",
                     "type": "heading_2",
                     "heading_2": {
-                        "rich_text": [{"type": "text", "text": {"content": "🥗 Meals Logged"}}]
+                        "rich_text": [{"type": "text", "text": {"content": f"🥗 Meals Logged — {user_name}"}}]
                     },
                 },
                 {
@@ -113,7 +138,7 @@ class NotionService:
             ],
         )
 
-        logger.info(f"Created daily page for {date_str}: {page_id}")
+        logger.info(f"Created daily page for {user_name} ({user_id_str}) on {date_str}: {page_id}")
         return page_id
 
     async def _find_meal_table(self, page_id: str) -> str | None:
@@ -218,12 +243,24 @@ class NotionService:
             "total_fats": round(new_fats, 1),
         }
 
-    async def get_daily_summary(self, day: date) -> dict | None:
-        """Fetch today's summary from Notion."""
+    async def get_daily_summary(self, day: date, user_id: int = None) -> dict | None:
+        """Fetch today's summary from Notion for a specific user."""
         date_str = day.isoformat()
+
+        # Build filter — always by date, optionally by user
+        if user_id:
+            query_filter = {
+                "and": [
+                    {"property": "Date", "title": {"equals": date_str}},
+                    {"property": "User ID", "rich_text": {"equals": str(user_id)}},
+                ]
+            }
+        else:
+            query_filter = {"property": "Date", "title": {"equals": date_str}}
+
         response = await self.client.databases.query(
             database_id=self.db_id,
-            filter={"property": "Date", "title": {"equals": date_str}},
+            filter=query_filter,
         )
 
         if not response["results"]:

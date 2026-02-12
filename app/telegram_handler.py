@@ -110,10 +110,13 @@ async def _log_and_respond(user_id: int, chat_id: int, result: dict, profile: di
         return
 
     try:
-        # Get or create today's Notion page
+        # Get or create today's Notion page for this user
         today = date.today()
         target_kcal = profile.get("target_kcal", settings.DEFAULT_TARGET_KCAL)
-        page_id = await notion_service.get_or_create_daily_page(today, target_kcal)
+        user_name = profile.get("name", "Unknown")
+        page_id = await notion_service.get_or_create_daily_page(
+            today, user_id, user_name=user_name, target_kcal=target_kcal
+        )
 
         # Append meal rows and update totals
         await notion_service.append_meal_rows(page_id, items)
@@ -201,7 +204,7 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
 
     elif command == "/today":
         try:
-            summary = await notion_service.get_daily_summary(date.today())
+            summary = await notion_service.get_daily_summary(date.today(), user_id=user_id)
             if summary:
                 remaining = summary["remaining_kcal"]
                 status = "✅ Under Limit" if remaining > 0 else "⚠️ Over Target"
@@ -272,6 +275,17 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
         except Exception as e:
             logger.error(f"Failed to create Notion DB: {e}", exc_info=True)
             await tg.send_message(chat_id, f"❌ Failed to create Notion DB: {str(e)[:200]}", parse_mode="")
+
+    elif command == "/migrate_notion":
+        try:
+            success = await notion_service.migrate_add_user_properties()
+            if success:
+                await tg.send_message(chat_id, "✅ Notion database migrated! User ID and User Name columns added.")
+            else:
+                await tg.send_message(chat_id, "❌ Migration failed. Check server logs.", parse_mode="")
+        except Exception as e:
+            logger.error(f"Migration error: {e}", exc_info=True)
+            await tg.send_message(chat_id, f"❌ Migration error: {str(e)[:200]}", parse_mode="")
 
     else:
         await tg.send_message(chat_id, "Unknown command. Use /help to see available commands.")

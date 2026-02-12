@@ -88,7 +88,7 @@ async def telegram_webhook(request: Request):
 
 
 @app.get("/status", response_class=HTMLResponse)
-async def status_page(request: Request):
+async def status_page(request: Request, user_id: int = None):
     """Mobile-optimized daily status dashboard."""
     from app.notion_service import notion_service
 
@@ -102,7 +102,7 @@ async def status_page(request: Request):
 
     try:
         if settings.NOTION_DAILY_LOG_DB_ID:
-            summary = await notion_service.get_daily_summary(today)
+            summary = await notion_service.get_daily_summary(today, user_id=user_id)
             if summary:
                 total_kcal = summary["total_kcal"]
                 target_kcal = summary["target_kcal"]
