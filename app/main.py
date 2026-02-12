@@ -39,15 +39,16 @@ async def lifespan(app: FastAPI):
     # Set Telegram webhook
     if settings.TELEGRAM_BOT_TOKEN:
         webhook_url = f"{settings.WEBHOOK_BASE_URL}/webhook/telegram"
-        # Upload self-signed cert if available (for IP-based HTTPS webhooks)
         import os
         cert_path = os.environ.get("SSL_CERTFILE", "certs/cert.pem")
-        cert_exists = os.path.exists(cert_path)
-        cert_to_upload = cert_path if cert_exists else None
-        logger.info(f"🔑 SSL cert at '{cert_path}': {'found' if cert_exists else 'NOT found'}")
-        logger.info(f"📡 Registering webhook: {webhook_url} (cert: {'yes' if cert_to_upload else 'no'})")
-        result = await tg.set_webhook(webhook_url, certificate_path=cert_to_upload)
-        logger.info(f"📡 Telegram webhook result: {result}")
+        if os.path.exists(cert_path):
+            # Production: deploy pipeline handles webhook with cert upload via curl
+            logger.info(f"� Production mode (SSL cert found at {cert_path})")
+            logger.info(f"📡 Webhook will be set by deploy pipeline: {webhook_url}")
+        else:
+            # Dev mode: register webhook directly (no cert needed for ngrok/localhost)
+            result = await tg.set_webhook(webhook_url)
+            logger.info(f"📡 Telegram webhook: {result}")
     else:
         logger.warning("⚠️  No TELEGRAM_BOT_TOKEN — webhook not set")
 

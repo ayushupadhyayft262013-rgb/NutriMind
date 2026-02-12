@@ -18,4 +18,12 @@ jobs:
             cd /opt/nutrimind
             git pull origin main
             docker compose up --build -d
+            # Wait for container to be ready
+            sleep 5
+            # Re-register webhook with self-signed cert (required for IP-based HTTPS)
+            curl -s -F "url=https://${{ secrets.DROPLET_IP }}:8443/webhook/telegram" \
+                 -F "certificate=@/opt/nutrimind/certs/cert.pem" \
+                 -F 'allowed_updates=["message"]' \
+                 https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/setWebhook
+            echo ""
             echo "✅ Deployed at $(date)"
