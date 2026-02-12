@@ -37,16 +37,8 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("SQLite database initialized")
 
-    # Set Telegram webhook (always register on startup)
-    if settings.TELEGRAM_BOT_TOKEN:
-        webhook_url = f"{settings.WEBHOOK_BASE_URL}/webhook/telegram"
-        cert_path = os.environ.get("SSL_CERTFILE", "certs/cert.pem")
-        cert_to_upload = cert_path if os.path.exists(cert_path) else None
-        logger.info(f"Setting webhook: {webhook_url} (cert: {cert_to_upload or 'none'})")
-        result = await tg.set_webhook(webhook_url, certificate_path=cert_to_upload)
-        logger.info(f"Telegram webhook response: {result}")
-    else:
-        logger.warning("No TELEGRAM_BOT_TOKEN - webhook not set")
+    # Note: Telegram webhook is registered by entrypoint.sh using curl
+    # (httpx multipart cert upload was unreliable)
 
     yield
 
