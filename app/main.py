@@ -42,9 +42,12 @@ async def lifespan(app: FastAPI):
         # Upload self-signed cert if available (for IP-based HTTPS webhooks)
         import os
         cert_path = os.environ.get("SSL_CERTFILE", "certs/cert.pem")
-        cert_to_upload = cert_path if os.path.exists(cert_path) else None
+        cert_exists = os.path.exists(cert_path)
+        cert_to_upload = cert_path if cert_exists else None
+        logger.info(f"🔑 SSL cert at '{cert_path}': {'found' if cert_exists else 'NOT found'}")
+        logger.info(f"📡 Registering webhook: {webhook_url} (cert: {'yes' if cert_to_upload else 'no'})")
         result = await tg.set_webhook(webhook_url, certificate_path=cert_to_upload)
-        logger.info(f"📡 Telegram webhook: {result}")
+        logger.info(f"📡 Telegram webhook result: {result}")
     else:
         logger.warning("⚠️  No TELEGRAM_BOT_TOKEN — webhook not set")
 
