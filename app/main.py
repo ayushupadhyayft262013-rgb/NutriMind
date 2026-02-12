@@ -2,6 +2,7 @@
 
 import logging
 import math
+import os
 from contextlib import asynccontextmanager
 from datetime import date
 
@@ -24,40 +25,33 @@ logger = logging.getLogger("nutrimind")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup & shutdown hooks."""
-    logger.info("🧠 NutriMind starting up...")
+    logger.info("NutriMind starting up...")
 
     # Validate config
     missing = settings.validate()
     if missing:
-        logger.warning(f"⚠️  Missing config keys: {', '.join(missing)}")
+        logger.warning(f"Missing config keys: {', '.join(missing)}")
         logger.warning("Some features may not work. Set them in .env")
 
     # Initialize database
     await init_db()
-    logger.info("✅ SQLite database initialized")
+    logger.info("SQLite database initialized")
 
-    # Set Telegram webhook
+    # Set Telegram webhook (always register on startup)
     if settings.TELEGRAM_BOT_TOKEN:
         webhook_url = f"{settings.WEBHOOK_BASE_URL}/webhook/telegram"
-        import os
         cert_path = os.environ.get("SSL_CERTFILE", "certs/cert.pem")
-        if os.path.exists(cert_path):
-            # Production: deploy pipeline handles webhook with cert upload via curl
-            logger.info(f"� Production mode (SSL cert found at {cert_path})")
-            logger.info(f"📡 Webhook will be set by deploy pipeline: {webhook_url}")
-        else:
-            # Dev mode: register webhook directly (no cert needed for ngrok/localhost)
-            result = await tg.set_webhook(webhook_url)
-            logger.info(f"📡 Telegram webhook: {result}")
+        cert_to_upload = cert_path if os.path.exists(cert_path) else None
+        logger.info(f"Setting webhook: {webhook_url} (cert: {cert_to_upload or 'none'})")
+        result = await tg.set_webhook(webhook_url, certificate_path=cert_to_upload)
+        logger.info(f"Telegram webhook response: {result}")
     else:
-        logger.warning("⚠️  No TELEGRAM_BOT_TOKEN — webhook not set")
+        logger.warning("No TELEGRAM_BOT_TOKEN - webhook not set")
 
     yield
 
     # Shutdown
-    if settings.TELEGRAM_BOT_TOKEN:
-        await tg.delete_webhook()
-    logger.info("👋 NutriMind shutting down")
+    logger.info("NutriMind shutting down")
 
 
 app = FastAPI(
@@ -70,7 +64,7 @@ app = FastAPI(
 templates = Jinja2Templates(directory="app/templates")
 
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
+# --- Routes ---------------------------------------------------------------
 
 
 @app.get("/health")
@@ -84,10 +78,10 @@ async def telegram_webhook(request: Request):
     """Receive Telegram webhook updates."""
     try:
         update = await request.json()
-        logger.info(f"📩 Telegram update: {update.get('update_id', 'unknown')}")
+        logger.info(f"Telegram update: {update.get('update_id', 'unknown')}")
         await handle_update(update)
     except Exception as e:
-        logger.error(f"❌ Webhook error: {e}", exc_info=True)
+        logger.error(f"Webhook error: {e}", exc_info=True)
     return JSONResponse({"ok": True})
 
 
@@ -118,7 +112,7 @@ async def status_page(request: Request, user_id: int = None):
 
     remaining_kcal = target_kcal - total_kcal
 
-    # Calculate ring offset (circumference = 2 * pi * 80 ≈ 502)
+    # Calculate ring offset (circumference = 2 * pi * 80 ~ 502)
     circumference = 2 * math.pi * 80
     progress = min(total_kcal / target_kcal, 1.0) if target_kcal > 0 else 0
     ring_offset = circumference * (1 - progress)
