@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriMind — Daily Status</title>
+    <meta name="description" content="NutriMind AI nutrition tracker daily status dashboard">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e4e4e7;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 24px 0 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .date {
+            font-size: 0.85rem;
+            color: #71717a;
+            margin-top: 4px;
+        }
+
+        /* Ring Chart */
+        .ring-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        .ring-svg {
+            width: 200px;
+            height: 200px;
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: #1e1e2e;
+            stroke-width: 12;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 502;
+            stroke-dashoffset: {{ ring_offset }};
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ring-fill.under { stroke: url(#gradient-under); }
+        .ring-fill.over { stroke: url(#gradient-over); }
+
+        .ring-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .ring-center .kcal-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .ring-center .kcal-label {
+            font-size: 0.75rem;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ring-center .kcal-remaining {
+            font-size: 0.85rem;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .ring-center .kcal-remaining.under { color: #34d399; }
+        .ring-center .kcal-remaining.over { color: #f87171; }
+
+        /* Status Badge */
+        .status-badge {
+            text-align: center;
+            margin: 8px 0 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.under {
+            background: rgba(52, 211, 153, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.2);
+        }
+
+        .badge.over {
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        /* Macro Cards */
+        .macros-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .macro-card {
+            background: linear-gradient(145deg, #16161e, #1a1a2e);
+            border-radius: 16px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .macro-card .macro-icon { font-size: 1.2rem; }
+
+        .macro-card .macro-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 6px 0 2px;
+        }
+
+        .macro-card .macro-label {
+            font-size: 0.7rem;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .macro-card .macro-bar {
+            height: 4px;
+            border-radius: 2px;
+            background: #1e1e2e;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .macro-card .macro-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        .protein-fill { background: linear-gradient(90deg, #a78bfa, #c084fc); }
+        .carbs-fill { background: linear-gradient(90deg, #60a5fa, #38bdf8); }
+        .fats-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+
+        /* Meals Section */
+        .meals-section {
+            background: linear-gradient(145deg, #16161e, #1a1a2e);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .meals-section h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #a1a1aa;
+            margin-bottom: 14px;
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .meal-item:last-child { border-bottom: none; }
+
+        .meal-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .meal-meta {
+            font-size: 0.75rem;
+            color: #71717a;
+            margin-top: 2px;
+        }
+
+        .meal-kcal {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #a78bfa;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: #52525b;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px 0;
+            color: #3f3f46;
+            font-size: 0.7rem;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #34d399;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 NutriMind</h1>
+            <div class="date"><span class="live-dot"></span>{{ date }}</div>
+        </div>
+
+        <!-- Calorie Ring -->
+        <div class="ring-container">
+            <svg class="ring-svg" viewBox="0 0 180 180">
+                <defs>
+                    <linearGradient id="gradient-under" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#a78bfa"/>
+                        <stop offset="50%" style="stop-color:#60a5fa"/>
+                        <stop offset="100%" style="stop-color:#34d399"/>
+                    </linearGradient>
+                    <linearGradient id="gradient-over" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#f87171"/>
+                        <stop offset="100%" style="stop-color:#fbbf24"/>
+                    </linearGradient>
+                </defs>
+                <circle class="ring-bg" cx="90" cy="90" r="80"/>
+                <circle class="ring-fill {{ 'under' if remaining_kcal > 0 else 'over' }}" cx="90" cy="90" r="80"/>
+            </svg>
+            <div class="ring-center">
+                <div class="kcal-value">{{ total_kcal }}</div>
+                <div class="kcal-label">of {{ target_kcal }} kcal</div>
+                <div class="kcal-remaining {{ 'under' if remaining_kcal > 0 else 'over' }}">
+                    {% if remaining_kcal > 0 %}
+                        {{ remaining_kcal }} remaining
+                    {% else %}
+                        {{ remaining_kcal|abs }} over
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status-badge">
+            <span class="badge {{ 'under' if remaining_kcal > 0 else 'over' }}">
+                {{ "UNDER LIMIT ✅" if remaining_kcal > 0 else "OVER TARGET ⚠️" }}
+            </span>
+        </div>
+
+        <!-- Macros -->
+        <div class="macros-grid">
+            <div class="macro-card">
+                <div class="macro-icon">🥩</div>
+                <div class="macro-value">{{ total_protein }}g</div>
+                <div class="macro-label">Protein</div>
+                <div class="macro-bar">
+                    <div class="macro-bar-fill protein-fill" style="width: {{ protein_pct }}%"></div>
+                </div>
+            </div>
+            <div class="macro-card">
+                <div class="macro-icon">🍞</div>
+                <div class="macro-value">{{ total_carbs }}g</div>
+                <div class="macro-label">Carbs</div>
+                <div class="macro-bar">
+                    <div class="macro-bar-fill carbs-fill" style="width: {{ carbs_pct }}%"></div>
+                </div>
+            </div>
+            <div class="macro-card">
+                <div class="macro-icon">🧈</div>
+                <div class="macro-value">{{ total_fats }}g</div>
+                <div class="macro-label">Fats</div>
+                <div class="macro-bar">
+                    <div class="macro-bar-fill fats-fill" style="width: {{ fats_pct }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meals -->
+        <div class="meals-section">
+            <h2>🍽️ Today's Meals</h2>
+            {% if meals %}
+                {% for meal in meals %}
+                <div class="meal-item">
+                    <div>
+                        <div class="meal-name">{{ meal.name }}</div>
+                        <div class="meal-meta">P:{{ meal.protein_g }}g · C:{{ meal.carbs_g }}g · F:{{ meal.fats_g }}g</div>
+                    </div>
+                    <div class="meal-kcal">{{ meal.kcal }} kcal</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    No meals logged yet today.<br/>
+                    Send food to your Telegram bot to get started!
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            NutriMind · Powered by Gemini 2.0 Flash
+        </div>
+    </div>
+</body>
+</html>

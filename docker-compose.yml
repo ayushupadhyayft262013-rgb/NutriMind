@@ -1,0 +1,17 @@
+services:
+  nutrimind:
+    build: .
+    container_name: nutrimind
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persist SQLite database across container rebuilds
+      - nutrimind_data:/app/data
+    environment:
+      - SQLITE_DB_PATH=/app/data/nutrimind.db
+
+volumes:
+  nutrimind_data:
