@@ -13,6 +13,9 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+# In-memory state for /set_targets conversational flow
+_target_edit_state: dict[int, bool] = {}
+
 
 async def handle_update(update: dict) -> None:
     """Process an incoming Telegram update."""
@@ -23,6 +26,7 @@ async def handle_update(update: dict) -> None:
     chat_id = message["chat"]["id"]
     user_id = message["from"]["id"]
     text = message.get("text", "")
+    logger.info(f"Raw text: '{text}' (len={len(text)})")
     photo = message.get("photo")
     voice = message.get("voice")
     caption = message.get("caption", "")
@@ -30,6 +34,21 @@ async def handle_update(update: dict) -> None:
     # ─── Commands ─────────────────────────────────────────────────────
     if text.startswith("/"):
         await handle_command(user_id, chat_id, text.strip())
+        return
+
+    # ─── Target edit flow (reply to /set_targets) ─────────────────────
+    if user_id in _target_edit_state and not text.startswith("/"):
+        del _target_edit_state[user_id]
+        parts = text.strip().split()
+        if len(parts) >= 4:
+            try:
+                kcal, protein, carbs, fats = int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3])
+                await db.upsert_user_profile(user_id, target_kcal=kcal, target_protein=protein, target_carbs=carbs, target_fats=fats)
+                await tg.send_message(chat_id, f"Targets updated!\n\nCalories: {kcal} kcal\nProtein: {protein}g\nCarbs: {carbs}g\nFats: {fats}g", parse_mode="")
+            except ValueError:
+                await tg.send_message(chat_id, "Please send 4 numbers: kcal protein carbs fats\nExample: 1800 150 200 60", parse_mode="")
+        else:
+            await tg.send_message(chat_id, "Please send 4 numbers: kcal protein carbs fats\nExample: 1800 150 200 60", parse_mode="")
         return
 
     # ─── Onboarding flow ─────────────────────────────────────────────
@@ -252,79 +271,29 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
 
         parts = command.split()
         logger.info(f"set_targets: parts={parts}, len={len(parts)}")
-        if len(parts) == 1:
-            # No args — show current targets and usage
-            await tg.send_message(
-                chat_id,
-                f"🎯 *Your Current Targets:*\n\n"
-                f"Calories: *{profile['target_kcal']}* kcal\n"
-                f"Protein: *{profile['target_protein']}*g\n"
-                f"Carbs: *{profile['target_carbs']}*g\n"
-                f"Fats: *{profile['target_fats']}*g\n\n"
-                f"*To change, use:*\n"
-                f"`/set_targets 2000 150 200 60`\n"
-                f"_(kcal protein carbs fats)_\n\n"
-                f"Or set individually:\n"
-                f"`/set_targets kcal 2000`\n"
-                f"`/set_targets protein 150`\n"
-                f"`/set_targets carbs 200`\n"
-                f"`/set_targets fats 60`",
-            )
-        elif len(parts) == 5:
-            # Set all four: /set_targets 2000 150 200 60
+
+        if len(parts) >= 5:
+            # Inline: /set_targets 2000 150 200 60
             try:
-                kcal = int(parts[1])
-                protein = int(parts[2])
-                carbs = int(parts[3])
-                fats = int(parts[4])
-                await db.upsert_user_profile(
-                    user_id,
-                    target_kcal=kcal,
-                    target_protein=protein,
-                    target_carbs=carbs,
-                    target_fats=fats,
-                )
-                await tg.send_message(
-                    chat_id,
-                    f"✅ *Targets updated!*\n\n"
-                    f"Calories: *{kcal}* kcal\n"
-                    f"Protein: *{protein}*g\n"
-                    f"Carbs: *{carbs}*g\n"
-                    f"Fats: *{fats}*g",
-                )
+                kcal, protein, carbs, fats = int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4])
+                await db.upsert_user_profile(user_id, target_kcal=kcal, target_protein=protein, target_carbs=carbs, target_fats=fats)
+                await tg.send_message(chat_id, f"Targets updated!\n\nCalories: {kcal} kcal\nProtein: {protein}g\nCarbs: {carbs}g\nFats: {fats}g", parse_mode="")
             except ValueError:
-                await tg.send_message(chat_id, "❌ All values must be numbers.\nUsage: `/set_targets 2000 150 200 60`")
-        elif len(parts) == 3:
-            # Set individual: /set_targets kcal 2000
-            target_name = parts[1].lower()
-            try:
-                value = int(parts[2])
-            except ValueError:
-                await tg.send_message(chat_id, "❌ Value must be a number.")
-                return
-
-            field_map = {
-                "kcal": "target_kcal",
-                "calories": "target_kcal",
-                "cal": "target_kcal",
-                "protein": "target_protein",
-                "carbs": "target_carbs",
-                "fats": "target_fats",
-                "fat": "target_fats",
-            }
-
-            if target_name not in field_map:
-                await tg.send_message(chat_id, "❌ Unknown target. Use: `kcal`, `protein`, `carbs`, or `fats`")
-                return
-
-            await db.upsert_user_profile(user_id, **{field_map[target_name]: value})
-            await tg.send_message(chat_id, f"✅ *{target_name.capitalize()}* target set to *{value}*{'g' if target_name != 'kcal' and target_name != 'calories' and target_name != 'cal' else ' kcal'}")
+                await tg.send_message(chat_id, "All values must be numbers.\nUsage: /set_targets 2000 150 200 60", parse_mode="")
         else:
+            # Show current targets and prompt for new values
+            _target_edit_state[user_id] = True
             await tg.send_message(
                 chat_id,
-                "❌ Invalid format.\n\n"
-                "Use: `/set_targets 2000 150 200 60`\n"
-                "Or: `/set_targets protein 150`",
+                f"Your Current Targets:\n\n"
+                f"  Calories: {profile['target_kcal']} kcal\n"
+                f"  Protein: {profile['target_protein']}g\n"
+                f"  Carbs: {profile['target_carbs']}g\n"
+                f"  Fats: {profile['target_fats']}g\n\n"
+                f"Reply with 4 numbers to update:\n"
+                f"kcal protein carbs fats\n\n"
+                f"Example: 1800 150 200 60",
+                parse_mode="",
             )
 
     elif command == "/preferences":
