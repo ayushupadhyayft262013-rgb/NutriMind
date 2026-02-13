@@ -99,6 +99,11 @@ async def status_page(request: Request, user_id: int = None):
                 total_protein = summary["total_protein"]
                 total_carbs = summary["total_carbs"]
                 total_fats = summary["total_fats"]
+                # Fetch individual meal rows from the Notion page
+                try:
+                    meals = await notion_service.get_meals_from_page(summary["page_id"])
+                except Exception as e:
+                    logger.error(f"Error fetching meals: {e}")
     except Exception as e:
         logger.error(f"Error fetching Notion data for dashboard: {e}")
 

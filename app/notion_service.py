@@ -149,6 +149,41 @@ class NotionService:
                 return block["id"]
         return None
 
+    async def get_meals_from_page(self, page_id: str) -> list[dict]:
+        """Read meal rows from the table inside a daily page."""
+        table_id = await self._find_meal_table(page_id)
+        if not table_id:
+            return []
+
+        rows = await self.client.blocks.children.list(block_id=table_id)
+        meals = []
+        for row in rows["results"]:
+            if row["type"] != "table_row":
+                continue
+            cells = row["table_row"]["cells"]
+            # Skip the header row (first row)
+            if not cells or not cells[0]:
+                continue
+            name = cells[0][0]["text"]["content"] if cells[0] else ""
+            if name.lower() in ("food item", "item", "food"):
+                continue  # skip header
+
+            def safe_num(cell_list, default=0):
+                try:
+                    return float(cell_list[0]["text"]["content"]) if cell_list else default
+                except (ValueError, IndexError, KeyError):
+                    return default
+
+            meals.append({
+                "name": name,
+                "kcal": safe_num(cells[1] if len(cells) > 1 else []),
+                "protein": safe_num(cells[2] if len(cells) > 2 else []),
+                "carbs": safe_num(cells[3] if len(cells) > 3 else []),
+                "fats": safe_num(cells[4] if len(cells) > 4 else []),
+                "source": cells[5][0]["text"]["content"] if len(cells) > 5 and cells[5] else "Estimated",
+            })
+        return meals
+
     async def append_meal_rows(self, page_id: str, items: list[dict]) -> None:
         """Append meal item rows to the table inside the daily page."""
         table_id = await self._find_meal_table(page_id)
