@@ -10,11 +10,16 @@ from app.notion_service import notion_service
 from app.onboarding import is_onboarding, start_onboarding, handle_onboarding_message
 from app.preferences import learn_from_correction
 from app.config import settings
+from app.notion_service import notion_service
 
 logger = logging.getLogger(__name__)
 
 # In-memory state for /set_targets conversational flow
 _target_edit_state: dict[int, bool] = {}
+
+# In-memory state for /edit_meals conversational flow
+# Maps user_id -> {"meals": [...], "page_id": str}
+_meal_edit_state: dict[int, dict] = {}
 
 
 async def handle_update(update: dict) -> None:
@@ -34,6 +39,67 @@ async def handle_update(update: dict) -> None:
     # ─── Commands ─────────────────────────────────────────────────────
     if text.startswith("/"):
         await handle_command(user_id, chat_id, text.strip())
+        return
+
+    # ─── Meal edit flow (reply to /edit_meals) ────────────────────────
+    if user_id in _meal_edit_state and not text.startswith("/"):
+        state = _meal_edit_state.pop(user_id)
+        meals = state["meals"]
+        page_id = state["page_id"]
+        parts = text.strip().split()
+
+        try:
+            idx = int(parts[0]) - 1
+            if idx < 0 or idx >= len(meals):
+                await tg.send_message(chat_id, f"Invalid number. Pick 1-{len(meals)}", parse_mode="")
+                _meal_edit_state[user_id] = state  # restore state
+                return
+
+            meal = meals[idx]
+            block_id = meal["block_id"]
+
+            if len(parts) == 1 or parts[1].lower() in ("del", "delete", "d", "remove"):
+                # Delete the meal
+                await notion_service.delete_meal_row(block_id)
+                totals = await notion_service.recalculate_daily_totals(page_id)
+                await tg.send_message(
+                    chat_id,
+                    f"Deleted: {meal['name']}\n\nNew total: {totals['total_kcal']} / {totals['target_kcal']} kcal",
+                    parse_mode="",
+                )
+            elif len(parts) >= 5:
+                # Edit: <num> <kcal> <protein> <carbs> <fats>
+                new_data = {
+                    "name": meal["name"],  # keep original name
+                    "kcal": float(parts[1]),
+                    "protein": float(parts[2]),
+                    "carbs": float(parts[3]),
+                    "fats": float(parts[4]),
+                    "source": "Edited",
+                }
+                # If a new name is provided (6+ parts), use it
+                if len(parts) >= 6:
+                    new_data["name"] = " ".join(parts[5:])
+                await notion_service.update_meal_row(block_id, new_data)
+                totals = await notion_service.recalculate_daily_totals(page_id)
+                await tg.send_message(
+                    chat_id,
+                    f"Updated: {new_data['name']}\n"
+                    f"{new_data['kcal']} kcal | P:{new_data['protein']}g | C:{new_data['carbs']}g | F:{new_data['fats']}g\n\n"
+                    f"New total: {totals['total_kcal']} / {totals['target_kcal']} kcal",
+                    parse_mode="",
+                )
+            else:
+                await tg.send_message(
+                    chat_id,
+                    f"To delete: reply with just the number (e.g. 1)\n"
+                    f"To edit: <num> <kcal> <protein> <carbs> <fats>\n"
+                    f"Example: {idx+1} 350 25 30 10",
+                    parse_mode="",
+                )
+                _meal_edit_state[user_id] = state  # restore state
+        except ValueError:
+            await tg.send_message(chat_id, "Reply with a meal number. Use /edit_meals to see the list.", parse_mode="")
         return
 
     # ─── Target edit flow (reply to /set_targets) ─────────────────────
@@ -198,13 +264,14 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
             chat_id,
             "*🤖 NutriMind Commands:*\n\n"
             "/start — Setup or restart\n"
-            "/set\\_targets — View or change daily targets\n"
-            "/start\\_tracking — Resume logging\n"
-            "/stop\\_tracking — Pause logging\n"
+            "/set_targets — View or change daily targets\n"
+            "/edit_meals — Edit or delete logged meals\n"
+            "/start_tracking — Resume logging\n"
+            "/stop_tracking — Pause logging\n"
             "/today — Today's nutrition summary\n"
             "/profile — View your profile\n"
             "/preferences — View saved preferences\n"
-            "/setup\\_notion — Create Notion database\n"
+            "/setup_notion — Create Notion database\n"
             "/help — Show this message\n\n"
             "*How to log:*\n"
             "📝 Send text: \"Had 2 eggs and toast\"\n"
@@ -295,6 +362,38 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
                 f"Example: 1800 150 200 60",
                 parse_mode="",
             )
+
+    elif command == "/edit_meals":
+        profile = await db.get_user_profile(user_id)
+        if not profile or not profile.get("onboarded"):
+            await tg.send_message(chat_id, "Complete onboarding first with /start")
+            return
+
+        try:
+            summary = await notion_service.get_daily_summary(date.today(), user_id=user_id)
+            if not summary:
+                await tg.send_message(chat_id, "No meals logged today.", parse_mode="")
+                return
+
+            meals = await notion_service.get_meals_from_page(summary["page_id"])
+            if not meals:
+                await tg.send_message(chat_id, "No meals logged today.", parse_mode="")
+                return
+
+            _meal_edit_state[user_id] = {"meals": meals, "page_id": summary["page_id"]}
+
+            lines = ["Today's meals:\n"]
+            for i, m in enumerate(meals, 1):
+                lines.append(f"{i}. {m['name']} — {m['kcal']} kcal")
+                lines.append(f"   P:{m['protein']}g  C:{m['carbs']}g  F:{m['fats']}g")
+            lines.append("\nTo delete: reply with the number")
+            lines.append("To edit: <num> <kcal> <protein> <carbs> <fats>")
+            lines.append("Example: 1 350 25 30 10")
+
+            await tg.send_message(chat_id, "\n".join(lines), parse_mode="")
+        except Exception as e:
+            logger.error(f"edit_meals error: {e}", exc_info=True)
+            await tg.send_message(chat_id, f"Error loading meals: {str(e)[:100]}", parse_mode="")
 
     elif command == "/preferences":
         prefs = await db.get_user_preferences(user_id)

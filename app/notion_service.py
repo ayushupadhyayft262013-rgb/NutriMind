@@ -175,6 +175,7 @@ class NotionService:
                     return default
 
             meals.append({
+                "block_id": row["id"],
                 "name": name,
                 "kcal": safe_num(cells[1] if len(cells) > 1 else []),
                 "protein": safe_num(cells[2] if len(cells) > 2 else []),
@@ -183,6 +184,61 @@ class NotionService:
                 "source": cells[5][0]["text"]["content"] if len(cells) > 5 and cells[5] else "Estimated",
             })
         return meals
+
+    async def delete_meal_row(self, block_id: str) -> None:
+        """Delete a meal row from the Notion table."""
+        await self.client.blocks.delete(block_id=block_id)
+        logger.info(f"Deleted meal row: {block_id}")
+
+    async def update_meal_row(self, block_id: str, data: dict) -> None:
+        """Update a meal row's cell values in the Notion table."""
+        def cell(val):
+            return [{"type": "text", "text": {"content": str(val)}}]
+
+        await self.client.blocks.update(
+            block_id=block_id,
+            table_row={
+                "cells": [
+                    cell(data.get("name", "Unknown")),
+                    cell(data.get("kcal", 0)),
+                    cell(data.get("protein", 0)),
+                    cell(data.get("carbs", 0)),
+                    cell(data.get("fats", 0)),
+                    cell(data.get("source", "Edited")),
+                ]
+            },
+        )
+        logger.info(f"Updated meal row: {block_id}")
+
+    async def recalculate_daily_totals(self, page_id: str) -> dict:
+        """Re-sum all meal rows and update the daily page totals."""
+        meals = await self.get_meals_from_page(page_id)
+        total_kcal = sum(m["kcal"] for m in meals)
+        total_protein = sum(m["protein"] for m in meals)
+        total_carbs = sum(m["carbs"] for m in meals)
+        total_fats = sum(m["fats"] for m in meals)
+
+        await self.client.pages.update(
+            page_id=page_id,
+            properties={
+                "Total Kcal": {"number": int(total_kcal)},
+                "Total Protein": {"number": round(total_protein, 1)},
+                "Total Carbs": {"number": round(total_carbs, 1)},
+                "Total Fats": {"number": round(total_fats, 1)},
+            },
+        )
+
+        page = await self.client.pages.retrieve(page_id=page_id)
+        target_kcal = page["properties"]["Target Kcal"]["number"] or 1800
+        logger.info(f"Recalculated totals for {page_id}: {total_kcal} kcal")
+        return {
+            "total_kcal": int(total_kcal),
+            "target_kcal": int(target_kcal),
+            "remaining_kcal": int(target_kcal - total_kcal),
+            "total_protein": round(total_protein, 1),
+            "total_carbs": round(total_carbs, 1),
+            "total_fats": round(total_fats, 1),
+        }
 
     async def append_meal_rows(self, page_id: str, items: list[dict]) -> None:
         """Append meal item rows to the table inside the daily page."""

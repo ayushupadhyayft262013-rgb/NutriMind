@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,11 @@
     <meta name="description" content="NutriMind AI nutrition tracker daily status dashboard">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -68,12 +73,16 @@
             stroke-width: 12;
             stroke-linecap: round;
             stroke-dasharray: 502;
-            stroke-dashoffset: {{ ring_offset }};
             transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .ring-fill.under { stroke: url(#gradient-under); }
-        .ring-fill.over { stroke: url(#gradient-over); }
+        .ring-fill.under {
+            stroke: url(#gradient-under);
+        }
+
+        .ring-fill.over {
+            stroke: url(#gradient-over);
+        }
 
         .ring-center {
             position: absolute;
@@ -103,8 +112,13 @@
             font-weight: 500;
         }
 
-        .ring-center .kcal-remaining.under { color: #34d399; }
-        .ring-center .kcal-remaining.over { color: #f87171; }
+        .ring-center .kcal-remaining.under {
+            color: #34d399;
+        }
+
+        .ring-center .kcal-remaining.over {
+            color: #f87171;
+        }
 
         /* Status Badge */
         .status-badge {
@@ -146,10 +160,12 @@
             border-radius: 16px;
             padding: 16px 12px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .macro-card .macro-icon { font-size: 1.2rem; }
+        .macro-card .macro-icon {
+            font-size: 1.2rem;
+        }
 
         .macro-card .macro-value {
             font-size: 1.3rem;
@@ -179,16 +195,24 @@
             transition: width 1s ease;
         }
 
-        .protein-fill { background: linear-gradient(90deg, #a78bfa, #c084fc); }
-        .carbs-fill { background: linear-gradient(90deg, #60a5fa, #38bdf8); }
-        .fats-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .protein-fill {
+            background: linear-gradient(90deg, #a78bfa, #c084fc);
+        }
+
+        .carbs-fill {
+            background: linear-gradient(90deg, #60a5fa, #38bdf8);
+        }
+
+        .fats-fill {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
 
         /* Meals Section */
         .meals-section {
             background: linear-gradient(145deg, #16161e, #1a1a2e);
             border-radius: 20px;
             padding: 20px;
-            border: 1px solid rgba(255,255,255,0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .meals-section h2 {
@@ -203,10 +227,22 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: opacity 0.3s ease;
         }
 
-        .meal-item:last-child { border-bottom: none; }
+        .meal-item:last-child {
+            border-bottom: none;
+        }
+
+        .meal-item.deleting {
+            opacity: 0.3;
+        }
+
+        .meal-info {
+            flex: 1;
+            min-width: 0;
+        }
 
         .meal-name {
             font-weight: 500;
@@ -219,6 +255,13 @@
             margin-top: 2px;
         }
 
+        .meal-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .meal-kcal {
             font-weight: 600;
             font-size: 0.95rem;
@@ -226,11 +269,201 @@
             white-space: nowrap;
         }
 
+        .meal-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background: rgba(96, 165, 250, 0.12);
+            color: #60a5fa;
+        }
+
+        .btn-edit:hover {
+            background: rgba(96, 165, 250, 0.25);
+        }
+
+        .btn-delete {
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+        }
+
+        .btn-delete:hover {
+            background: rgba(248, 113, 113, 0.25);
+        }
+
+        /* Edit Form */
+        .edit-form {
+            display: none;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .edit-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .edit-field label {
+            display: block;
+            font-size: 0.65rem;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .edit-field input {
+            width: 100%;
+            padding: 7px 10px;
+            background: #0f0f17;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #e4e4e7;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .edit-field input:focus {
+            border-color: rgba(167, 139, 250, 0.4);
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            opacity: 0.85;
+        }
+
+        .btn-save:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: #a1a1aa;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Delete Confirmation */
+        .delete-confirm {
+            display: none;
+            padding: 10px 0;
+            text-align: right;
+        }
+
+        .delete-confirm.active {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .delete-confirm span {
+            font-size: 0.8rem;
+            color: #f87171;
+        }
+
+        .delete-confirm .btn-confirm-delete {
+            padding: 5px 14px;
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-confirm .btn-confirm-delete:hover {
+            background: rgba(248, 113, 113, 0.35);
+        }
+
         .empty-state {
             text-align: center;
             padding: 24px;
             color: #52525b;
             font-size: 0.9rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .toast.error {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
         }
 
         /* Footer */
@@ -243,8 +476,15 @@
 
         /* Pulse animation */
         @keyframes pulse-glow {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .live-dot {
@@ -258,6 +498,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -270,26 +511,27 @@
             <svg class="ring-svg" viewBox="0 0 180 180">
                 <defs>
                     <linearGradient id="gradient-under" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#a78bfa"/>
-                        <stop offset="50%" style="stop-color:#60a5fa"/>
-                        <stop offset="100%" style="stop-color:#34d399"/>
+                        <stop offset="0%" style="stop-color:#a78bfa" />
+                        <stop offset="50%" style="stop-color:#60a5fa" />
+                        <stop offset="100%" style="stop-color:#34d399" />
                     </linearGradient>
                     <linearGradient id="gradient-over" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#f87171"/>
-                        <stop offset="100%" style="stop-color:#fbbf24"/>
+                        <stop offset="0%" style="stop-color:#f87171" />
+                        <stop offset="100%" style="stop-color:#fbbf24" />
                     </linearGradient>
                 </defs>
-                <circle class="ring-bg" cx="90" cy="90" r="80"/>
-                <circle class="ring-fill {{ 'under' if remaining_kcal > 0 else 'over' }}" cx="90" cy="90" r="80"/>
+                <circle class="ring-bg" cx="90" cy="90" r="80" />
+                <circle class="ring-fill {{ 'under' if remaining_kcal > 0 else 'over' }}" cx="90" cy="90" r="80"
+                    id="ring-progress" />
             </svg>
             <div class="ring-center">
-                <div class="kcal-value">{{ total_kcal }}</div>
-                <div class="kcal-label">of {{ target_kcal }} kcal</div>
-                <div class="kcal-remaining {{ 'under' if remaining_kcal > 0 else 'over' }}">
+                <div class="kcal-value" id="total-kcal">{{ total_kcal }}</div>
+                <div class="kcal-label">of <span id="target-kcal">{{ target_kcal }}</span> kcal</div>
+                <div class="kcal-remaining {{ 'under' if remaining_kcal > 0 else 'over' }}" id="remaining-kcal">
                     {% if remaining_kcal > 0 %}
-                        {{ remaining_kcal }} remaining
+                    {{ remaining_kcal }} remaining
                     {% else %}
-                        {{ remaining_kcal|abs }} over
+                    {{ remaining_kcal|abs }} over
                     {% endif %}
                 </div>
             </div>
@@ -306,7 +548,7 @@
         <div class="macros-grid">
             <div class="macro-card">
                 <div class="macro-icon">🥩</div>
-                <div class="macro-value">{{ total_protein }}g</div>
+                <div class="macro-value" id="total-protein">{{ total_protein }}g</div>
                 <div class="macro-label">Protein</div>
                 <div class="macro-bar">
                     <div class="macro-bar-fill protein-fill" style="width: {{ protein_pct }}%"></div>
@@ -314,7 +556,7 @@
             </div>
             <div class="macro-card">
                 <div class="macro-icon">🍞</div>
-                <div class="macro-value">{{ total_carbs }}g</div>
+                <div class="macro-value" id="total-carbs">{{ total_carbs }}g</div>
                 <div class="macro-label">Carbs</div>
                 <div class="macro-bar">
                     <div class="macro-bar-fill carbs-fill" style="width: {{ carbs_pct }}%"></div>
@@ -322,7 +564,7 @@
             </div>
             <div class="macro-card">
                 <div class="macro-icon">🧈</div>
-                <div class="macro-value">{{ total_fats }}g</div>
+                <div class="macro-value" id="total-fats">{{ total_fats }}g</div>
                 <div class="macro-label">Fats</div>
                 <div class="macro-bar">
                     <div class="macro-bar-fill fats-fill" style="width: {{ fats_pct }}%"></div>
@@ -331,23 +573,69 @@
         </div>
 
         <!-- Meals -->
-        <div class="meals-section">
+        <div class="meals-section" id="meals-container">
             <h2>🍽️ Today's Meals</h2>
             {% if meals %}
-                {% for meal in meals %}
-                <div class="meal-item">
-                    <div>
-                        <div class="meal-name">{{ meal.name }}</div>
-                        <div class="meal-meta">P:{{ meal.protein }}g · C:{{ meal.carbs }}g · F:{{ meal.fats }}g</div>
-                    </div>
+            {% for meal in meals %}
+            <div class="meal-item" id="meal-{{ meal.block_id }}">
+                <div class="meal-info">
+                    <div class="meal-name">{{ meal.name }}</div>
+                    <div class="meal-meta">P:{{ meal.protein }}g · C:{{ meal.carbs }}g · F:{{ meal.fats }}g</div>
+                </div>
+                <div class="meal-right">
                     <div class="meal-kcal">{{ meal.kcal }} kcal</div>
+                    <div class="meal-actions">
+                        <button class="btn-icon btn-edit" onclick="toggleEdit('{{ meal.block_id }}')"
+                            title="Edit">✏️</button>
+                        <button class="btn-icon btn-delete" onclick="toggleDelete('{{ meal.block_id }}')"
+                            title="Delete">🗑️</button>
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
+            <!-- Edit form for this meal -->
+            <div class="edit-form" id="edit-{{ meal.block_id }}">
+                <div class="edit-grid">
+                    <div class="edit-field full-width">
+                        <label>Name</label>
+                        <input type="text" id="edit-name-{{ meal.block_id }}" value="{{ meal.name }}">
+                    </div>
+                    <div class="edit-field">
+                        <label>Calories</label>
+                        <input type="number" id="edit-kcal-{{ meal.block_id }}" value="{{ meal.kcal }}">
+                    </div>
+                    <div class="edit-field">
+                        <label>Protein (g)</label>
+                        <input type="number" id="edit-protein-{{ meal.block_id }}" value="{{ meal.protein }}"
+                            step="0.1">
+                    </div>
+                    <div class="edit-field">
+                        <label>Carbs (g)</label>
+                        <input type="number" id="edit-carbs-{{ meal.block_id }}" value="{{ meal.carbs }}" step="0.1">
+                    </div>
+                    <div class="edit-field">
+                        <label>Fats (g)</label>
+                        <input type="number" id="edit-fats-{{ meal.block_id }}" value="{{ meal.fats }}" step="0.1">
+                    </div>
+                </div>
+                <div class="edit-actions">
+                    <button class="btn-cancel" onclick="toggleEdit('{{ meal.block_id }}')">Cancel</button>
+                    <button class="btn-save" onclick="saveMeal('{{ meal.block_id }}')">Save</button>
+                </div>
+            </div>
+            <!-- Delete confirmation -->
+            <div class="delete-confirm" id="delete-{{ meal.block_id }}">
+                <span>Delete this meal?</span>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn-cancel" onclick="toggleDelete('{{ meal.block_id }}')">No</button>
+                    <button class="btn-confirm-delete" onclick="deleteMeal('{{ meal.block_id }}')">Yes, delete</button>
+                </div>
+            </div>
+            {% endfor %}
             {% else %}
-                <div class="empty-state">
-                    No meals logged yet today.<br/>
-                    Send food to your Telegram bot to get started!
-                </div>
+            <div class="empty-state">
+                No meals logged yet today.<br />
+                Send food to your Telegram bot to get started!
+            </div>
             {% endif %}
         </div>
 
@@ -355,5 +643,134 @@
             NutriMind · Powered by Gemini 2.0 Flash
         </div>
     </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const PAGE_ID = "{{ page_id }}";
+
+        // Set initial ring offset
+        document.getElementById('ring-progress').style.strokeDashoffset = "{{ ring_offset }}";
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function toggleEdit(blockId) {
+            const form = document.getElementById('edit-' + blockId);
+            // Close any open delete confirmations
+            document.querySelectorAll('.delete-confirm.active').forEach(el => el.classList.remove('active'));
+            form.classList.toggle('active');
+        }
+
+        function toggleDelete(blockId) {
+            const confirm = document.getElementById('delete-' + blockId);
+            // Close any open edit forms
+            document.querySelectorAll('.edit-form.active').forEach(el => el.classList.remove('active'));
+            confirm.classList.toggle('active');
+        }
+
+        async function saveMeal(blockId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const data = {
+                page_id: PAGE_ID,
+                name: document.getElementById('edit-name-' + blockId).value,
+                kcal: parseFloat(document.getElementById('edit-kcal-' + blockId).value) || 0,
+                protein: parseFloat(document.getElementById('edit-protein-' + blockId).value) || 0,
+                carbs: parseFloat(document.getElementById('edit-carbs-' + blockId).value) || 0,
+                fats: parseFloat(document.getElementById('edit-fats-' + blockId).value) || 0,
+                source: 'Edited',
+            };
+
+            try {
+                const resp = await fetch('/api/meals/' + blockId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                const result = await resp.json();
+                if (result.ok) {
+                    // Update meal display
+                    const mealEl = document.getElementById('meal-' + blockId);
+                    mealEl.querySelector('.meal-name').textContent = data.name;
+                    mealEl.querySelector('.meal-meta').textContent =
+                        'P:' + data.protein + 'g · C:' + data.carbs + 'g · F:' + data.fats + 'g';
+                    mealEl.querySelector('.meal-kcal').textContent = data.kcal + ' kcal';
+
+                    // Update totals
+                    updateTotals(result.totals);
+                    toggleEdit(blockId);
+                    showToast('Meal updated!');
+                } else {
+                    showToast('Error: ' + (result.error || 'Unknown'), 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Save';
+        }
+
+        async function deleteMeal(blockId) {
+            const mealEl = document.getElementById('meal-' + blockId);
+            mealEl.classList.add('deleting');
+
+            try {
+                const resp = await fetch('/api/meals/' + blockId + '?page_id=' + PAGE_ID, {
+                    method: 'DELETE',
+                });
+                const result = await resp.json();
+                if (result.ok) {
+                    // Remove meal elements
+                    mealEl.remove();
+                    document.getElementById('edit-' + blockId)?.remove();
+                    document.getElementById('delete-' + blockId)?.remove();
+
+                    // Update totals
+                    updateTotals(result.totals);
+                    showToast('Meal deleted');
+
+                    // If no meals left, show empty state
+                    if (!document.querySelector('.meal-item')) {
+                        document.getElementById('meals-container').innerHTML =
+                            '<h2>🍽️ Today\'s Meals</h2><div class="empty-state">No meals logged yet today.<br/>Send food to your Telegram bot!</div>';
+                    }
+                } else {
+                    mealEl.classList.remove('deleting');
+                    showToast('Error: ' + (result.error || 'Unknown'), 'error');
+                }
+            } catch (e) {
+                mealEl.classList.remove('deleting');
+                showToast('Network error', 'error');
+            }
+        }
+
+        function updateTotals(totals) {
+            if (!totals) return;
+            document.getElementById('total-kcal').textContent = totals.total_kcal;
+            document.getElementById('target-kcal').textContent = totals.target_kcal;
+            document.getElementById('total-protein').textContent = totals.total_protein + 'g';
+            document.getElementById('total-carbs').textContent = totals.total_carbs + 'g';
+            document.getElementById('total-fats').textContent = totals.total_fats + 'g';
+
+            const remaining = totals.remaining_kcal;
+            const remEl = document.getElementById('remaining-kcal');
+            remEl.textContent = remaining > 0 ? remaining + ' remaining' : Math.abs(remaining) + ' over';
+            remEl.className = 'kcal-remaining ' + (remaining > 0 ? 'under' : 'over');
+
+            // Update ring
+            const progress = Math.min(totals.total_kcal / totals.target_kcal, 1.0);
+            const offset = 502 * (1 - progress);
+            document.getElementById('ring-progress').style.strokeDashoffset = offset;
+        }
+    </script>
 </body>
+
 </html>

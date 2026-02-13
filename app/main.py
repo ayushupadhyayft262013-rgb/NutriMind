@@ -77,6 +77,34 @@ async def telegram_webhook(request: Request):
     return JSONResponse({"ok": True})
 
 
+@app.delete("/api/meals/{block_id}")
+async def delete_meal(block_id: str, page_id: str):
+    """Delete a meal and recalculate daily totals."""
+    from app.notion_service import notion_service
+    try:
+        await notion_service.delete_meal_row(block_id)
+        totals = await notion_service.recalculate_daily_totals(page_id)
+        return JSONResponse({"ok": True, "totals": totals})
+    except Exception as e:
+        logger.error(f"Delete meal error: {e}", exc_info=True)
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.put("/api/meals/{block_id}")
+async def update_meal(block_id: str, request: Request):
+    """Update a meal's values and recalculate daily totals."""
+    from app.notion_service import notion_service
+    try:
+        data = await request.json()
+        page_id = data.pop("page_id")
+        await notion_service.update_meal_row(block_id, data)
+        totals = await notion_service.recalculate_daily_totals(page_id)
+        return JSONResponse({"ok": True, "totals": totals})
+    except Exception as e:
+        logger.error(f"Update meal error: {e}", exc_info=True)
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @app.get("/status", response_class=HTMLResponse)
 async def status_page(request: Request, user_id: int = None):
     """Mobile-optimized daily status dashboard."""
@@ -89,6 +117,7 @@ async def status_page(request: Request, user_id: int = None):
     total_carbs = 0
     total_fats = 0
     meals = []
+    page_id = ""
 
     try:
         if settings.NOTION_DAILY_LOG_DB_ID:
@@ -99,6 +128,7 @@ async def status_page(request: Request, user_id: int = None):
                 total_protein = summary["total_protein"]
                 total_carbs = summary["total_carbs"]
                 total_fats = summary["total_fats"]
+                page_id = summary["page_id"]
                 # Fetch individual meal rows from the Notion page
                 try:
                     meals = await notion_service.get_meals_from_page(summary["page_id"])
@@ -139,6 +169,7 @@ async def status_page(request: Request, user_id: int = None):
             "fats_pct": fats_pct,
             "ring_offset": ring_offset,
             "meals": meals,
+            "page_id": page_id,
         },
     )
 
