@@ -148,5 +148,28 @@ class GeminiService:
         return self._parse_response(response.text)
 
 
+    async def detect_intent(self, text: str) -> dict:
+        """Analyze if text is a DELETE request or regular logging."""
+        prompt = (
+            f"Analyze this user input: '{text}'\n"
+            "Determine if the user wants to DELETE/REMOVE a previously logged meal, or usage is just logging food.\n"
+            "Respond in JSON:\n"
+            "{\n"
+            '  "action": "DELETE" or "LOG",\n'
+            '  "target": "food name to delete" (only if action is DELETE)\n'
+            "}"
+        )
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.1,
+                response_mime_type="application/json",
+            ),
+        )
+        return self._parse_response(response.text)
+
+
 # Singleton
 gemini_service = GeminiService()

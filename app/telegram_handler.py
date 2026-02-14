@@ -148,6 +148,46 @@ async def handle_update(update: dict) -> None:
         await tg.send_message(chat_id, response)
         return
 
+    # ─── Check for natural language delete ───────────────────────────
+    if text and any(k in text.lower() for k in ["delete", "remove", "undo", "cancel"]):
+        from app.gemini_service import gemini_service
+        await tg.send_typing_action(chat_id)
+        intent = await gemini_service.detect_intent(text)
+        
+        if intent.get("action") == "DELETE" and intent.get("target"):
+            target = intent["target"].lower()
+            # Fetch today's meals
+            try:
+                today = date.today()
+                summary = await notion_service.get_daily_summary(today, user_id=user_id)
+                if not summary:
+                    await tg.send_message(chat_id, "No meals found to delete today.")
+                    return
+                
+                meals = await notion_service.get_meals_from_page(summary["page_id"])
+                # Find match (simple containment check)
+                matches = [m for m in meals if target in m["name"].lower()]
+                
+                if not matches:
+                    await tg.send_message(chat_id, f"Couldn't find a meal matching '{target}'. Check /edit_meals.")
+                    return
+                
+                # If multiple, take the last one (most recent)
+                meal_to_delete = matches[-1]
+                await notion_service.delete_meal_row(meal_to_delete["block_id"])
+                totals = await notion_service.recalculate_daily_totals(summary["page_id"])
+                
+                await tg.send_message(
+                    chat_id,
+                    f"🗑️ Deleted: {meal_to_delete['name']}\n\n"
+                    f"🔥 New total: {totals['total_kcal']} / {totals['target_kcal']} kcal"
+                )
+                return
+            except Exception as e:
+                logger.error(f"Delete error: {e}")
+                await tg.send_message(chat_id, "❌ Something went wrong trying to delete that.")
+                return
+
     # ─── Process food input ──────────────────────────────────────────
     await tg.send_typing_action(chat_id)
 
