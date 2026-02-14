@@ -19,6 +19,7 @@ RULES:
 6. Look for scale references in images (plates, hands, cutlery, bottles) to estimate portion sizes.
 7. If confidence is below 0.7 for any item, include a "clarification_question" asking the user for specifics.
 8. When user preferences are provided, use them to override defaults (e.g., if the user's "bowl" is 300ml, use that).
+9. GROUP identical items into a single entry with summed macros (e.g., "5 boiled eggs" -> one item "5 Boiled Eggs" with 5x calories, NOT 5 separate items).
 
 ALWAYS respond in this exact JSON format and NOTHING else:
 {
