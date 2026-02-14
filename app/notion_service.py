@@ -334,6 +334,28 @@ class NotionService:
             "total_fats": round(new_fats, 1),
         }
 
+    async def get_weekly_summaries(self, end_date: date, user_id: int = None) -> list[dict]:
+        """Fetch daily summaries for the 7 days ending on end_date."""
+        from datetime import timedelta
+        results = []
+        for i in range(6, -1, -1):  # 6 days ago → today
+            day = end_date - timedelta(days=i)
+            summary = await self.get_daily_summary(day, user_id=user_id)
+            if summary:
+                results.append(summary)
+            else:
+                results.append({
+                    "date": day.isoformat(),
+                    "total_kcal": 0,
+                    "target_kcal": 0,
+                    "remaining_kcal": 0,
+                    "total_protein": 0,
+                    "total_carbs": 0,
+                    "total_fats": 0,
+                    "page_id": None,
+                })
+        return results
+
     async def get_daily_summary(self, day: date, user_id: int = None) -> dict | None:
         """Fetch today's summary from Notion for a specific user."""
         date_str = day.isoformat()

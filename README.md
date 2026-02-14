@@ -29,6 +29,22 @@
 | 🐳 **Dockerized Deployment** | One-command deploy with Docker Compose, persistent data, SSL certificates |
 | 🔄 **CI/CD Pipeline** | Push to `main` → GitHub Actions auto-deploys to DigitalOcean, including webhook re-registration |
 
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/dashboard.png" alt="NutriMind Dashboard" width="380" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/telegram_bot.png" alt="Telegram Bot" width="380" />
+</p>
+
+<p align="center">
+  <em>Left: Real-time web dashboard with calorie ring, macros & meal editing</em><br/>
+  <em>Right: Telegram bot — AI food recognition from photos, instant logging</em>
+</p>
+
 ---
 
 ## 🏗️ Architecture
