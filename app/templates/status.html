@@ -305,6 +305,22 @@
             font-size: 0.8rem;
         }
 
+        .btn-generate-ai {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #a78bfa, #c084fc);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-generate-ai:hover {
+            opacity: 0.9;
+        }
+
         /* Meals */
         .meal-item {
             display: flex;
@@ -516,8 +532,8 @@
             <div class="ai-header">
                 <span>🧠</span> Weekly Insights
             </div>
-            <div class="ai-content" id="ai-text">
-                <div class="ai-loading">Analyzing your nutrition week...</div>
+            <div class="ai-content" id="ai-content-area">
+                <button class="btn-generate-ai" onclick="loadInsights()">✨ Generate AI Analysis</button>
             </div>
         </div>
 
@@ -631,24 +647,27 @@
             } catch (e) { console.error("Chart error", e); }
         }
 
-        // Fetch AI Insights
+        // Fetch AI Insights (On Demand)
         async function loadInsights() {
+            const container = document.getElementById('ai-content-area');
+            container.innerHTML = '<div class="ai-loading">🔮 Consulting Gemini... (this uses 7 days of data)</div>';
+
             try {
                 const res = await fetch(`/api/insights?date=${DATE_ISO}`);
                 const data = await res.json();
-                const el = document.getElementById('ai-text');
+
                 if (data.ok) {
-                    el.innerHTML = data.insights.replace(/\n/g, '<br/>');
+                    container.innerHTML = data.insights.replace(/\n/g, '<br/>');
                 } else {
-                    el.innerHTML = "Could not generate insights right now.";
+                    container.innerHTML = "Could not generate insights right now.";
                 }
             } catch (e) {
-                document.getElementById('ai-text').innerHTML = "AI unavailable.";
+                container.innerHTML = "AI unavailable.";
             }
         }
 
         loadChart();
-        loadInsights();
+        // loadInsights(); 
 
         // Meal Actions (simplified)
         function toggleEdit(id) { document.getElementById('edit-' + id).classList.toggle('active'); }
