@@ -4,66 +4,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NutriMind — Daily Status</title>
-    <meta name="description" content="NutriMind AI nutrition tracker daily status dashboard">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>NutriMind — Connected</title>
+    <meta name="description" content="NutriMind AI Intelligence Dashboard">
+
+    <!-- Fonts: Poppins (Display) + Open Sans (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Poppins:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
+        /* ─── Variables & Tokens ───────────────────────── */
+        :root {
+            /* Colors */
+            --bg-deep: #050511;
+            --surface-glass: rgba(255, 255, 255, 0.03);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --surface-hover: rgba(255, 255, 255, 0.06);
+
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-tertiary: #6b7280;
+
+            /* Semantics */
+            --color-success: #34d399;
+            /* Emerald */
+            --color-warning: #fbbf24;
+            /* Amber */
+            --color-error: #f87171;
+            /* Rose */
+            --color-accent: #a78bfa;
+            /* Violet */
+            --color-accent-2: #60a5fa;
+            /* Blue */
+
+            /* Gradients */
+            --grad-primary: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+            --grad-glass: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+
+            /* Spacing */
+            --gap-sm: 12px;
+            --gap-md: 20px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+        }
+
+        /* ─── Reset & Base ─────────────────────────────── */
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0f;
-            color: #e4e4e7;
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 16px;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        .container {
-            max-width: 480px;
+        h1,
+        h2,
+        h3,
+        .font-display {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* ─── Ambient Background ───────────────────────── */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: var(--color-accent);
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: var(--color-success);
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, 20px);
+            }
+        }
+
+        /* ─── Layout (Bento Grid) ──────────────────────── */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--gap-md);
+            padding: var(--gap-md);
+            max-width: 1200px;
             margin: 0 auto;
-            padding-bottom: 40px;
         }
 
-        /* Header with Navigation */
-        .header {
-            text-align: center;
-            padding: 24px 0 10px;
+        /* Desktop: 3 Columns */
+        @media (min-width: 1024px) {
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: auto auto 1fr;
+                /* Header, Top Row, Bottom Row */
+            }
+
+            .area-header {
+                grid-column: 1 / -1;
+            }
+
+            .area-main-stat {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3;
+            }
+
+            .area-chart {
+                grid-column: 2 / 4;
+                grid-row: 2 / 3;
+            }
+
+            .area-macros {
+                grid-column: 1 / 2;
+                grid-row: 3 / 4;
+            }
+
+            .area-insights {
+                grid-column: 2 / 3;
+                grid-row: 3 / 4;
+            }
+
+            .area-meals {
+                grid-column: 3 / 4;
+                grid-row: 3 / 4;
+            }
         }
 
-        .header h1 {
+        /* Tablet: 2 Columns */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .grid-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .area-header {
+                grid-column: 1 / -1;
+            }
+
+            .area-chart {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* ─── Components: Cards ────────────────────────── */
+        .card {
+            background: var(--surface-glass);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* ─── Components: Header ───────────────────────── */
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .brand {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+            background: var(--grad-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            letter-spacing: -0.5px;
         }
 
         .date-nav {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid var(--surface-border);
         }
 
         .nav-btn {
+            color: var(--text-secondary);
             text-decoration: none;
-            color: #71717a;
             font-size: 1.2rem;
-            padding: 4px 8px;
-            border-radius: 8px;
-            transition: all 0.2s;
+            transition: color 0.2s;
+            line-height: 1;
         }
 
         .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .nav-btn.disabled {
@@ -72,40 +240,32 @@
         }
 
         .date-display {
+            font-weight: 600;
             font-size: 0.9rem;
-            color: #e4e4e7;
-            font-weight: 500;
-            min-width: 140px;
+            min-width: 100px;
             text-align: center;
+            font-family: 'Poppins', sans-serif;
         }
 
-        .live-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: #34d399;
-            border-radius: 50%;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-
-        /* Ring Chart */
-        .ring-container {
+        /* ─── Component: Main Stat (Ring) ──────────────── */
+        .stat-ring-wrapper {
+            position: relative;
             display: flex;
             justify-content: center;
-            padding: 20px 0;
-            position: relative;
+            align-items: center;
+            padding: 10px 0;
         }
 
         .ring-svg {
-            width: 180px;
-            height: 180px;
+            width: 100%;
+            max-width: 220px;
+            height: auto;
             transform: rotate(-90deg);
         }
 
         .ring-bg {
             fill: none;
-            stroke: #1e1e2e;
+            stroke: rgba(255, 255, 255, 0.05);
             stroke-width: 12;
         }
 
@@ -114,590 +274,579 @@
             stroke-width: 12;
             stroke-linecap: round;
             stroke-dasharray: 502;
-            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 2*PI*80 approx */
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .ring-fill.under {
-            stroke: url(#gradient-under);
+            stroke: var(--color-success);
         }
 
         .ring-fill.over {
-            stroke: url(#gradient-over);
+            stroke: var(--color-error);
         }
 
-        .ring-center {
+        .ring-content {
             position: absolute;
+            text-align: center;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center;
-            padding-top: 10px;
         }
 
-        .kcal-value {
-            font-size: 2rem;
+        .stat-value {
+            font-size: 2.5rem;
             font-weight: 700;
-            color: #fff;
+            line-height: 1;
+            letter-spacing: -1px;
+            font-family: 'Poppins', sans-serif;
         }
 
-        .kcal-label {
-            font-size: 0.75rem;
-            color: #71717a;
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
-        }
-
-        .kcal-remaining {
-            font-size: 0.85rem;
             margin-top: 4px;
-            font-weight: 500;
         }
 
-        .kcal-remaining.under {
-            color: #34d399;
-        }
-
-        .kcal-remaining.over {
-            color: #f87171;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            text-align: center;
-            margin: 8px 0 20px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .stat-status {
+            margin-top: 8px;
+            font-size: 0.85rem;
             font-weight: 600;
-            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
         }
 
-        .badge.under {
-            background: rgba(52, 211, 153, 0.12);
-            color: #34d399;
-            border: 1px solid rgba(52, 211, 153, 0.2);
+        .status-good {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--color-success);
         }
 
-        .badge.over {
-            background: rgba(248, 113, 113, 0.12);
-            color: #f87171;
-            border: 1px solid rgba(248, 113, 113, 0.2);
+        .status-bad {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--color-error);
         }
 
-        /* Macros */
-        .macros-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 24px;
+        /* ─── Component: Macros ────────────────────────── */
+        .macros-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+            justify-content: center;
         }
 
-        .macro-card {
-            background: linear-gradient(145deg, #16161e, #1a1a2e);
-            border-radius: 16px;
-            padding: 16px 12px;
+        .macro-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-md);
+        }
+
+        .macro-icon {
+            font-size: 1.2rem;
+            width: 32px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .macro-value {
+        .macro-info {
+            flex: 1;
+        }
+
+        .macro-name {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .macro-val {
             font-size: 1.1rem;
             font-weight: 700;
-            color: #fff;
-            margin: 4px 0 2px;
+            font-family: 'Poppins', sans-serif;
         }
 
-        .macro-label {
-            font-size: 0.7rem;
-            color: #71717a;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .macro-bar {
-            height: 4px;
-            border-radius: 2px;
-            background: #1e1e2e;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .macro-bar-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 1s ease;
-        }
-
-        .protein-fill {
-            background: linear-gradient(90deg, #a78bfa, #c084fc);
-        }
-
-        .carbs-fill {
-            background: linear-gradient(90deg, #60a5fa, #38bdf8);
-        }
-
-        .fats-fill {
-            background: linear-gradient(90deg, #fbbf24, #f59e0b);
-        }
-
-        /* Weekly Chart */
-        .section-card {
-            background: linear-gradient(145deg, #16161e, #1a1a2e);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #a1a1aa;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title span {
-            margin-right: 8px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 180px;
+        /* ─── Component: Chart ─────────────────────────── */
+        .chart-wrapper {
+            height: 280px;
             width: 100%;
+            position: relative;
         }
 
-        /* AI Insights */
-        .ai-card {
-            background: rgba(167, 139, 250, 0.05);
-            border: 1px solid rgba(167, 139, 250, 0.2);
+        /* ─── Component: Insights ──────────────────────── */
+        .insight-content {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .btn-magic {
+            width: 100%;
             padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 20px;
+            background: var(--grad-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
         }
 
-        .ai-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(167, 139, 250, 0.6);
+        }
+
+        .btn-magic:active {
+            transform: scale(0.98);
+        }
+
+        /* ─── Component: Meals List ────────────────────── */
+        .meals-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .meals-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .meals-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .meal-card {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface-hover);
             margin-bottom: 12px;
-            font-size: 0.9rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .meal-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .meal-title {
             font-weight: 600;
-            color: #c084fc;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
         }
 
-        .ai-content {
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #e4e4e7;
-        }
-
-        .ai-loading {
-            font-style: italic;
-            color: #71717a;
-            font-size: 0.8rem;
-        }
-
-        .btn-generate-ai {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #a78bfa, #c084fc);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-generate-ai:hover {
-            opacity: 0.9;
-        }
-
-        /* Meals */
-        .meal-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .meal-item:last-child {
-            border-bottom: none;
-        }
-
-        .meal-name {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .meal-meta {
+        .meal-macros {
             font-size: 0.75rem;
-            color: #71717a;
-            margin-top: 2px;
+            color: var(--text-tertiary);
+            display: flex;
+            gap: 8px;
+        }
+
+        .meal-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .meal-kcal {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: #a78bfa;
-            margin-right: 12px;
-            white-space: nowrap;
-        }
-
-        .btn-icon {
-            background: none;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-            padding: 4px;
-        }
-
-        .btn-icon:hover {
-            opacity: 1;
-        }
-
-        /* Edit/Delete forms reused from before... */
-        .edit-form {
-            display: none;
-            padding: 12px 0;
-            background: rgba(0, 0, 0, 0.2);
-            margin-top: 8px;
-            border-radius: 8px;
-        }
-
-        .edit-form.active {
-            display: block;
-        }
-
-        .edit-field {
-            margin-bottom: 8px;
-        }
-
-        .edit-field label {
-            display: block;
-            font-size: 0.7rem;
-            color: #aaa;
-            margin-bottom: 2px;
-        }
-
-        .edit-field input {
-            width: 100%;
-            background: #222;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 6px;
-            border-radius: 4px;
-        }
-
-        .btn-save {
-            background: #8b5cf6;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            float: right;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-
-        .delete-confirm {
-            display: none;
+            font-weight: 700;
+            color: var(--color-accent);
+            font-family: 'Poppins', sans-serif;
             text-align: right;
-            padding: 8px 0;
-            color: #f87171;
-            font-size: 0.8rem;
         }
 
-        .delete-confirm.active {
-            display: block;
+        .meal-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-5px);
+            height: 0;
+            overflow: hidden;
+            transition: all 0.3s;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #333;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            transition: transform 0.3s;
-            z-index: 999;
+        .meal-card:hover .meal-actions {
+            opacity: 1;
+            transform: translateY(0);
+            height: auto;
+            margin-top: 8px;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 30px 0;
-            color: #444;
+        .btn-mini {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-secondary);
             font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mini:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-mini.danger:hover {
+            background: rgba(248, 113, 113, 0.2);
+            color: var(--color-error);
+        }
+
+        /* ─── Utilities ────────────────────────────────── */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .text-accent {
+            color: var(--color-accent);
+        }
+
+        /* Edit Form Styles (Simplification of previous) */
+        .edit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-overlay.active {
+            display: flex;
+        }
+
+        .edit-modal {
+            background: #1a1a2e;
+            padding: 24px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f1a;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 8px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🧠 NutriMind</h1>
-            <div class="date-nav">
+
+    <!-- Ambient Blobs -->
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="grid-container">
+
+        <!-- HEADER -->
+        <header class="area-header header-content">
+            <div class="brand">NutriMind</div>
+            <nav class="date-nav">
                 <a href="/status?date={{ prev_date }}" class="nav-btn">←</a>
-                <div class="date-display">
-                    {% if is_today %}<span class="live-dot"></span>Today{% else %}{{ date }}{% endif %}
-                </div>
+                <span class="date-display">{% if is_today %}Today{% else %}{{ date }}{% endif %}</span>
                 <a href="/status?date={{ next_date }}" class="nav-btn {{ 'disabled' if is_today }}">→</a>
-            </div>
-            {% if not is_today %}
-            <div style="font-size: 0.75rem; color: #666; margin-top: 4px;">{{ date }}</div>
-            {% endif %}
-        </div>
+            </nav>
+        </header>
 
-        <!-- Ring -->
-        <div class="ring-container">
-            <svg class="ring-svg" viewBox="0 0 180 180">
-                <defs>
-                    <linearGradient id="gradient-under" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#a78bfa" />
-                        <stop offset="100%" style="stop-color:#34d399" />
-                    </linearGradient>
-                    <linearGradient id="gradient-over" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#f87171" />
-                        <stop offset="100%" style="stop-color:#fbbf24" />
-                    </linearGradient>
-                </defs>
-                <circle class="ring-bg" cx="90" cy="90" r="80" />
-                <circle class="ring-fill {{ 'under' if remaining_kcal > 0 else 'over' }}" cx="90" cy="90" r="80"
-                    id="ring-progress" />
-            </svg>
-            <div class="ring-center">
-                <div class="kcal-value">{{ total_kcal }}</div>
-                <div class="kcal-label">of {{ target_kcal }}</div>
-                <div class="kcal-remaining {{ 'under' if remaining_kcal > 0 else 'over' }}">
-                    {{ remaining_kcal if remaining_kcal > 0 else remaining_kcal|abs }} {{ 'left' if remaining_kcal > 0
-                    else 'over' }}
+        <!-- MAIN STAT (RING) -->
+        <section class="area-main-stat card">
+            <div class="section-title">Daily Energy</div>
+            <div class="stat-ring-wrapper">
+                <svg class="ring-svg" viewBox="0 0 180 180">
+                    <circle class="ring-bg" cx="90" cy="90" r="80" />
+                    <circle class="ring-fill {{ 'under' if remaining_kcal > 0 else 'over' }}" cx="90" cy="90" r="80"
+                        id="ring-progress" />
+                </svg>
+                <div class="ring-content">
+                    <div class="stat-value">{{ total_kcal }}</div>
+                    <div class="stat-label">of {{ target_kcal }}</div>
+                    <div class="stat-status {{ 'status-good' if remaining_kcal > 0 else 'status-bad' }}">
+                        {{ remaining_kcal if remaining_kcal > 0 else remaining_kcal|abs }} {{ 'Kcal Left' if
+                        remaining_kcal > 0 else 'Over' }}
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Macros -->
-        <div class="macros-grid">
-            <div class="macro-card">
-                <div class="macro-value">{{ total_protein }}g</div>
-                <div class="macro-label">Protein</div>
-                <div class="macro-bar">
-                    <div class="macro-bar-fill protein-fill" style="width: {{ protein_pct }}%"></div>
+        <!-- MACROS -->
+        <section class="area-macros card">
+            <div class="section-title">Macro Split</div>
+            <div class="macros-stack">
+                <div class="macro-row">
+                    <span class="macro-icon">🥩</span>
+                    <div class="macro-info">
+                        <div class="macro-name">Protein</div>
+                        <div class="macro-val">{{ total_protein }}g</div>
+                    </div>
+                    <!-- Mini bar could go here -->
+                </div>
+                <div class="macro-row">
+                    <span class="macro-icon">🍞</span>
+                    <div class="macro-info">
+                        <div class="macro-name">Carbs</div>
+                        <div class="macro-val">{{ total_carbs }}g</div>
+                    </div>
+                </div>
+                <div class="macro-row">
+                    <span class="macro-icon">🥑</span>
+                    <div class="macro-info">
+                        <div class="macro-name">Fats</div>
+                        <div class="macro-val">{{ total_fats }}g</div>
+                    </div>
                 </div>
             </div>
-            <div class="macro-card">
-                <div class="macro-value">{{ total_carbs }}g</div>
-                <div class="macro-label">Carbs</div>
-                <div class="macro-bar">
-                    <div class="macro-bar-fill carbs-fill" style="width: {{ carbs_pct }}%"></div>
-                </div>
-            </div>
-            <div class="macro-card">
-                <div class="macro-value">{{ total_fats }}g</div>
-                <div class="macro-label">Fats</div>
-                <div class="macro-bar">
-                    <div class="macro-bar-fill fats-fill" style="width: {{ fats_pct }}%"></div>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Weekly Chart -->
-        <div class="section-card">
-            <div class="section-title"><span>📈</span> Weekly Trend</div>
-            <div class="chart-container">
+        <!-- WEEKLY CHART -->
+        <section class="area-chart card">
+            <div class="section-title">Weekly Trend</div>
+            <div class="chart-wrapper">
                 <canvas id="weeklyChart"></canvas>
             </div>
-        </div>
+        </section>
 
-        <!-- AI Insights -->
-        <div class="ai-card" id="ai-panel">
-            <div class="ai-header">
-                <span>🧠</span> Weekly Insights
+        <!-- AI INSIGHTS -->
+        <section class="area-insights card">
+            <div class="section-title"><span class="text-accent">✨</span> AI Insights</div>
+            <div id="ai-content-area" class="insight-content">
+                <p style="color: var(--text-tertiary); margin-bottom: 20px;">
+                    Generate a personalized analysis of your nutrition trends for this week.
+                </p>
+                <button class="btn-magic" onclick="loadInsights()">Analyze My Week 🪄</button>
             </div>
-            <div class="ai-content" id="ai-content-area">
-                <button class="btn-generate-ai" onclick="loadInsights()">✨ Generate AI Analysis</button>
-            </div>
-        </div>
+        </section>
 
-        <!-- Meals -->
-        <div class="section-card">
-            <div class="section-title"><span>🍽️</span> Meals</div>
-            {% if meals %}
-            {% for meal in meals %}
-            <div class="meal-item" id="meal-{{ meal.block_id }}">
-                <div style="flex:1">
-                    <div class="meal-name">{{ meal.name }}</div>
-                    <div class="meal-meta">{{ meal.kcal }} kcal · P:{{ meal.protein }} · C:{{ meal.carbs }} · F:{{
-                        meal.fats }}</div>
-                </div>
-                <div>
-                    <button class="btn-icon" onclick="toggleEdit('{{ meal.block_id }}')">✏️</button>
-                    <button class="btn-icon" style="color:#f87171"
-                        onclick="toggleDelete('{{ meal.block_id }}')">🗑️</button>
-                </div>
-            </div>
-            <!-- Inline edit form -->
-            <div class="edit-form" id="edit-{{ meal.block_id }}">
-                <div style="padding:10px">
-                    <div class="edit-field"><label>Name</label><input id="name-{{ meal.block_id }}"
-                            value="{{ meal.name }}"></div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
-                        <div class="edit-field"><label>Kcal</label><input type="number" id="kcal-{{ meal.block_id }}"
-                                value="{{ meal.kcal }}"></div>
-                        <div class="edit-field"><label>Prot</label><input type="number" id="prot-{{ meal.block_id }}"
-                                value="{{ meal.protein }}"></div>
-                        <div class="edit-field"><label>Carb</label><input type="number" id="carb-{{ meal.block_id }}"
-                                value="{{ meal.carbs }}"></div>
-                        <div class="edit-field"><label>Fat</label><input type="number" id="fat-{{ meal.block_id }}"
-                                value="{{ meal.fats }}"></div>
+        <!-- MEALS -->
+        <section class="area-meals card">
+            <div class="section-title">Meal Log</div>
+            <div class="meals-container">
+                {% if meals %}
+                {% for meal in meals %}
+                <div class="meal-card" id="meal-{{ meal.block_id }}">
+                    <div class="meal-left">
+                        <div class="meal-title">{{ meal.name }}</div>
+                        <div class="meal-macros">
+                            <span class="meal-badge">P: {{ meal.protein }}</span>
+                            <span class="meal-badge">C: {{ meal.carbs }}</span>
+                            <span class="meal-badge">F: {{ meal.fats }}</span>
+                        </div>
                     </div>
-                    <button class="btn-save" onclick="saveMeal('{{ meal.block_id }}')">Save Changes</button>
-                    <div style="clear:both"></div>
+                    <div class="meal-right">
+                        <div class="meal-kcal">{{ meal.kcal }}</div>
+                    </div>
+                    <div class="meal-actions">
+                        <button class="btn-mini" onclick="openEdit('{{ meal.block_id }}')">Edit</button>
+                        <button class="btn-mini danger" onclick="deleteMeal('{{ meal.block_id }}')">Delete</button>
+                    </div>
                 </div>
+                <!-- Hidden Data inputs for JS convenience -->
+                <input type="hidden" id="data-name-{{ meal.block_id }}" value="{{ meal.name }}">
+                <input type="hidden" id="data-kcal-{{ meal.block_id }}" value="{{ meal.kcal }}">
+                <input type="hidden" id="data-prot-{{ meal.block_id }}" value="{{ meal.protein }}">
+                <input type="hidden" id="data-carb-{{ meal.block_id }}" value="{{ meal.carbs }}">
+                <input type="hidden" id="data-fat-{{ meal.block_id }}" value="{{ meal.fats }}">
+                {% endfor %}
+                {% else %}
+                <div style="text-align:center; padding: 40px; color: var(--text-tertiary);">
+                    No meals logged today yet.
+                </div>
+                {% endif %}
             </div>
-            <div class="delete-confirm" id="del-{{ meal.block_id }}">
-                Confirm delete? <b onclick="deleteMeal('{{ meal.block_id }}')"
-                    style="cursor:pointer; text-decoration:underline">Yes</b>
-                <span onclick="toggleDelete('{{ meal.block_id }}')"
-                    style="cursor:pointer; color:#aaa; margin-left:10px">Cancel</span>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div class="empty-state">No meals logged for this day.</div>
-            {% endif %}
-        </div>
+        </section>
 
-        <div class="footer">NutriMind · Powered by Gemini 2.0</div>
     </div>
-    <div class="toast" id="toast"></div>
 
+    <!-- Edit Modal (Simplified) -->
+    <div class="edit-overlay" id="edit-modal">
+        <div class="edit-modal">
+            <h3 style="margin-bottom: 20px;">Edit Meal</h3>
+            <input type="hidden" id="edit-id">
+            <div class="form-group"><label>Name</label><input id="edit-name"></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="form-group"><label>Kcal</label><input type="number" id="edit-kcal"></div>
+                <div class="form-group"><label>Prot</label><input type="number" id="edit-prot"></div>
+                <div class="form-group"><label>Carb</label><input type="number" id="edit-carb"></div>
+                <div class="form-group"><label>Fat</label><input type="number" id="edit-fat"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button class="btn-mini" onclick="closeEdit()">Cancel</button>
+                <button class="btn-mini" style="background:var(--color-success); color:white; border:none;"
+                    onclick="saveEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
     <script>
         const PAGE_ID = "{{ page_id }}";
         const DATE_ISO = "{{ date_iso }}";
 
-        // Ring Animation
+        // 1. Ring Animation
         setTimeout(() => {
-            document.getElementById('ring-progress').style.strokeDashoffset = "{{ ring_offset }}";
+            const progress = document.getElementById('ring-progress');
+            if (progress) progress.style.strokeDashoffset = "{{ ring_offset }}";
         }, 100);
 
-        // Fetch Weekly Data & Render Chart
+        // 2. Chart
         async function loadChart() {
             try {
                 const res = await fetch(`/api/weekly-data?date=${DATE_ISO}`);
                 const data = await res.json();
                 if (!data.ok) return;
 
-                const days = data.days.reverse(); // Serve chronological
+                const days = data.days.reverse();
                 const labels = days.map(d => new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }));
                 const kcals = days.map(d => d.total_kcal);
                 const targets = days.map(d => d.target_kcal || 2000);
 
                 const ctx = document.getElementById('weeklyChart').getContext('2d');
+
+                // Construct gradient
+                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(52, 211, 153, 0.5)'); // Emerald
+                gradient.addColorStop(1, 'rgba(52, 211, 153, 0.0)');
+
                 new Chart(ctx, {
-                    type: 'bar',
+                    type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [
-                            {
-                                label: 'Goal',
-                                data: targets,
-                                type: 'line',
-                                borderColor: 'rgba(255,255,255,0.2)',
-                                borderWidth: 1,
-                                borderDash: [5, 5],
-                                pointRadius: 0
-                            },
-                            {
-                                label: 'Calories',
-                                data: kcals,
-                                backgroundColor: kcals.map((v, i) => v > targets[i] ? '#f87171' : '#34d399'),
-                                borderRadius: 4,
-                                barThickness: 20
-                            }
-                        ]
+                        datasets: [{
+                            label: 'Calories',
+                            data: kcals,
+                            borderColor: '#34d399',
+                            backgroundColor: gradient,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#050511',
+                            pointBorderColor: '#34d399',
+                            pointBorderWidth: 2
+                        }, {
+                            label: 'Target',
+                            data: targets,
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderDash: [4, 4],
+                            pointRadius: 0,
+                            borderWidth: 1
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { display: false, beginAtZero: true },
-                            x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } }
+                            y: { display: false },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#6b7280', font: { family: 'Open Sans' } }
+                            }
                         }
                     }
                 });
-            } catch (e) { console.error("Chart error", e); }
+            } catch (e) { console.error(e); }
         }
+        loadChart();
 
-        // Fetch AI Insights (On Demand)
+        // 3. AI Insights
         async function loadInsights() {
             const container = document.getElementById('ai-content-area');
-            container.innerHTML = '<div class="ai-loading">🔮 Consulting Gemini... (this uses 7 days of data)</div>';
-
+            container.innerHTML = '<div style="color:#a78bfa; font-style:italic;">🔮 Connecting to Neural Core...</div>';
             try {
                 const res = await fetch(`/api/insights?date=${DATE_ISO}`);
                 const data = await res.json();
-
                 if (data.ok) {
-                    container.innerHTML = data.insights.replace(/\n/g, '<br/>');
+                    container.innerHTML = `<div style="line-height:1.6;">${data.insights.replace(/\n/g, '<br/>')}</div>`;
                 } else {
-                    container.innerHTML = "Could not generate insights right now.";
+                    container.innerHTML = "Analysis unavailable.";
                 }
-            } catch (e) {
-                container.innerHTML = "AI unavailable.";
-            }
+            } catch (e) { container.innerHTML = "Network error."; }
         }
 
-        loadChart();
-        // loadInsights(); 
-
-        // Meal Actions (simplified)
-        function toggleEdit(id) { document.getElementById('edit-' + id).classList.toggle('active'); }
-        function toggleDelete(id) { document.getElementById('del-' + id).classList.toggle('active'); }
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+        // 4. Editing Logic
+        function openEdit(id) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = document.getElementById('data-name-' + id).value;
+            document.getElementById('edit-kcal').value = document.getElementById('data-kcal-' + id).value;
+            document.getElementById('edit-prot').value = document.getElementById('data-prot-' + id).value;
+            document.getElementById('edit-carb').value = document.getElementById('data-carb-' + id).value;
+            document.getElementById('edit-fat').value = document.getElementById('data-fat-' + id).value;
+            document.getElementById('edit-modal').classList.add('active');
         }
 
-        async function saveMeal(id) {
+        function closeEdit() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
             const payload = {
                 page_id: PAGE_ID,
-                name: document.getElementById('name-' + id).value,
-                kcal: parseFloat(document.getElementById('kcal-' + id).value),
-                protein: parseFloat(document.getElementById('prot-' + id).value),
-                carbs: parseFloat(document.getElementById('carb-' + id).value),
-                fats: parseFloat(document.getElementById('fat-' + id).value),
-                source: 'Edited'
+                name: document.getElementById('edit-name').value,
+                kcal: parseFloat(document.getElementById('edit-kcal').value),
+                protein: parseFloat(document.getElementById('edit-prot').value),
+                carbs: parseFloat(document.getElementById('edit-carb').value),
+                fats: parseFloat(document.getElementById('edit-fat').value),
+                source: "Edited"
             };
-            await fetch('/api/meals/' + id, { method: 'PUT', body: JSON.stringify(payload) });
-            showToast('Saved! Refreshing...');
-            setTimeout(() => location.reload(), 1000);
+
+            // Optimistic Update? Let's just reload for safety with Notion
+            await fetch('/api/meals/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            location.reload();
         }
 
         async function deleteMeal(id) {
+            if (!confirm("Delete this meal?")) return;
             await fetch('/api/meals/' + id + '?page_id=' + PAGE_ID, { method: 'DELETE' });
-            showToast('Deleted! Refreshing...');
-            setTimeout(() => location.reload(), 1000);
+            location.reload();
         }
+
     </script>
 </body>
 
