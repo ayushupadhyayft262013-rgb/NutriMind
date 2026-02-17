@@ -30,6 +30,10 @@ class Settings:
     # Internal
     SQLITE_DB_PATH: str = os.getenv("SQLITE_DB_PATH", "nutrimind.db")
 
+    # USDA RAG
+    USDA_CHROMA_PATH: str = os.getenv("USDA_CHROMA_PATH", "data/usda_chroma")
+    USDA_MATCH_THRESHOLD: float = float(os.getenv("USDA_MATCH_THRESHOLD", "0.73"))
+
     def validate(self) -> list[str]:
         """Return a list of missing required config keys."""
         missing = []

@@ -7,6 +7,15 @@ from app import database as db
 
 logger = logging.getLogger(__name__)
 
+# Try to import the LangChain agent (graceful fallback)
+try:
+    from app.agent import run_nutrition_agent
+    AGENT_AVAILABLE = True
+    logger.info("LangChain nutrition agent loaded")
+except ImportError as e:
+    AGENT_AVAILABLE = False
+    logger.warning(f"LangChain agent not available, using direct Gemini: {e}")
+
 
 async def process_food_input(
     telegram_user_id: int,
@@ -20,7 +29,8 @@ async def process_food_input(
     """
     Process a food input through the Intelligent Approximation hierarchy:
     1. Load user preferences from SQLite.
-    2. Call Gemini with preferences injected.
+    2. For TEXT: Use LangChain Agent (USDA RAG + Calculator + Gemini).
+       For IMAGE/AUDIO: Use direct Gemini analysis.
     3. Check confidence levels → clarification or finalize.
 
     Returns:
@@ -38,8 +48,12 @@ async def process_food_input(
     # Step 1: Load user preferences
     preferences = await db.get_user_preferences(telegram_user_id)
 
-    # Step 2: Call Gemini based on input type
-    if input_type == "text":
+    # Step 2: Analyze based on input type
+    if input_type == "text" and AGENT_AVAILABLE:
+        # Use LangChain Agent (decomposes → USDA lookup → calculator)
+        result = await run_nutrition_agent(text, preferences)
+    elif input_type == "text":
+        # Fallback: direct Gemini
         result = await gemini_service.analyze_text(text, preferences)
     elif input_type == "image":
         result = await gemini_service.analyze_image(image_bytes, caption, preferences, mime_type)
