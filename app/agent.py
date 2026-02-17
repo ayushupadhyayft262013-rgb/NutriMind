@@ -101,6 +101,15 @@ IMPORTANT DEFAULTS:
 - 1 glass milk ≈ 250ml ≈ 258g
 - Use Indian portion sizes when region is unclear.
 
+BEVERAGE DECOMPOSITION (CRITICAL — do NOT treat beverages as pure milk!):
+- "milk tea" / "chai" (1 cup ≈ 250ml) → water (170ml, 0 cal), milk (80ml ≈ 82g), tea leaves (2g, ~0 cal). Only look up "milk" for the milk portion.
+- "coffee with milk" (1 cup ≈ 250ml) → water (200ml, 0 cal), milk (50ml ≈ 51g).
+- "lassi" (1 glass ≈ 250ml) → yogurt/curd (200g), water (50ml), sugar (10g).
+- "buttermilk / chaas" (1 glass ≈ 250ml) → yogurt (50g), water (200ml), salt.
+- "juice" → look up the specific fruit juice, not the whole fruit.
+- Sugar in beverages should be a SEPARATE item (1 tsp sugar ≈ 5g).
+- NEVER treat a mixed beverage as 100% of any single ingredient.
+
 YOUR FINAL RESPONSE must be ONLY this JSON (no other text):
 {
   "items": [
