@@ -188,6 +188,14 @@ def main():
     extract_dir = "data/usda_raw"
     output_dir = settings.USDA_CHROMA_PATH  # reusing the config key name
 
+    # Skip if vector store already exists
+    emb_path = os.path.join(output_dir, "embeddings.npz")
+    meta_path = os.path.join(output_dir, "metadata.json")
+    if os.path.exists(emb_path) and os.path.exists(meta_path):
+        logger.info(f"✅ USDA vector store already exists at {output_dir}, skipping ingestion.")
+        logger.info("   To force re-ingestion, delete the directory and re-run.")
+        return
+
     # Step 1: Download
     download_and_extract(USDA_CSV_URL, extract_dir)
 

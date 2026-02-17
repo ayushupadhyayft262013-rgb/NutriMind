@@ -12,6 +12,14 @@ else
     echo "Starting NutriMind with HTTP on port $PORT"
 fi
 
+# Auto-ingest USDA data if vector store doesn't exist (one-time, ~5 minutes)
+if [ ! -f /app/data/usda_chroma/embeddings.npz ]; then
+    echo "USDA vector store not found. Running one-time ingestion..."
+    python scripts/ingest_usda.py || echo "USDA ingestion failed (non-fatal, agent will use Gemini fallback)"
+else
+    echo "USDA vector store found, skipping ingestion."
+fi
+
 # Start uvicorn in background
 python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT $SSL_ARGS &
 UVICORN_PID=$!
