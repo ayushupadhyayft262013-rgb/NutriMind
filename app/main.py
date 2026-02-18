@@ -335,5 +335,9 @@ async def update_profile_stats(
         return HTMLResponse("Error updating profile", status_code=500)
     
 @app.get("/status")
-async def legacy_status_redirect():
-     return RedirectResponse("/dashboard")
+async def legacy_status_redirect(request: Request):
+     target = "/dashboard"
+     q = request.url.query
+     if q:
+         target += f"?{q}"
+     return RedirectResponse(target)
