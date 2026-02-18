@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, get_all_users
 from app.telegram_handler import handle_update
 from app import telegram_client as tg
 
@@ -209,6 +209,19 @@ async def status_page(request: Request, user_id: int = None, date: str = None):
     meals = []
     page_id = ""
 
+    users = []
+    try:
+        users = await get_all_users()
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+
+    # Default to first user if none selected and users exist
+    if user_id is None and users:
+        user_id = users[0]["telegram_user_id"]
+    
+    # If still no user_id (and no users), we might be in a fresh state
+    # user_id remains None, and dashboard will show empty/default data
+
     try:
         if settings.NOTION_DAILY_LOG_DB_ID:
             summary = await notion_service.get_daily_summary(selected_date, user_id=user_id)
@@ -263,6 +276,8 @@ async def status_page(request: Request, user_id: int = None, date: str = None):
             "ring_offset": ring_offset,
             "meals": meals,
             "page_id": page_id,
+            "users": users,
+            "current_user_id": user_id,
         },
     )
 

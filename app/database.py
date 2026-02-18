@@ -97,8 +97,23 @@ async def upsert_user_profile(telegram_user_id: int, **kwargs) -> None:
             await db.execute(
                 f"INSERT INTO user_profile ({cols}) VALUES ({placeholders})",
                 list(kwargs.values()),
+                f"INSERT INTO user_profile ({cols}) VALUES ({placeholders})",
+                list(kwargs.values()),
             )
         await db.commit()
+    finally:
+        await db.close()
+
+
+async def get_all_users() -> list[dict]:
+    """Fetch all user profiles (id, name, telegram_user_id) for the dashboard."""
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT telegram_user_id, name FROM user_profile ORDER BY name ASC"
+        )
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
     finally:
         await db.close()
 

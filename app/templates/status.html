@@ -570,6 +570,28 @@
             color: white;
             border-radius: 8px;
         }
+
+        /* User Select Dropdown */
+        .user-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 2px 8px;
+            /* Compact padding */
+            border-radius: 12px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            margin-left: 12px;
+            height: 28px;
+        }
+
+        .user-select option {
+            background: var(--bg-deep);
+            color: white;
+        }
     </style>
 </head>
 
@@ -583,7 +605,19 @@
 
         <!-- HEADER -->
         <header class="area-header header-content">
-            <div class="brand">NutriMind</div>
+            <div style="display:flex; align-items:center;">
+                <div class="brand">NutriMind</div>
+                {% if users %}
+                <select class="user-select" onchange="changeUser(this.value)">
+                    {% for user in users %}
+                    <option value="{{ user.telegram_user_id }}" {% if current_user_id==user.telegram_user_id
+                        %}selected{% endif %}>
+                        {{ user.name if user.name else "User " ~ user.telegram_user_id }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
             <nav class="date-nav">
                 <a href="/status?date={{ prev_date }}" class="nav-btn">←</a>
                 <span class="date-display">{% if is_today %}Today{% else %}{{ date }}{% endif %}</span>
@@ -723,6 +757,11 @@
     <script>
         const PAGE_ID = "{{ page_id }}";
         const DATE_ISO = "{{ date_iso }}";
+        const CURRENT_USER_ID = "{{ current_user_id }}";
+
+        function changeUser(userId) {
+            window.location.href = `/status?date=${DATE_ISO}&user_id=${userId}`;
+        }
 
         // 1. Ring Animation
         setTimeout(() => {
