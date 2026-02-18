@@ -619,9 +619,11 @@
                 {% endif %}
             </div>
             <nav class="date-nav">
-                <a href="/status?date={{ prev_date }}" class="nav-btn">←</a>
+                <a href="/status?date={{ prev_date }}{% if current_user_id %}&user_id={{ current_user_id }}{% endif %}"
+                    class="nav-btn">←</a>
                 <span class="date-display">{% if is_today %}Today{% else %}{{ date }}{% endif %}</span>
-                <a href="/status?date={{ next_date }}" class="nav-btn {{ 'disabled' if is_today }}">→</a>
+                <a href="/status?date={{ next_date }}{% if current_user_id %}&user_id={{ current_user_id }}{% endif %}"
+                    class="nav-btn {{ 'disabled' if is_today }}">→</a>
             </nav>
         </header>
 
@@ -772,7 +774,7 @@
         // 2. Chart
         async function loadChart() {
             try {
-                const res = await fetch(`/api/weekly-data?date=${DATE_ISO}`);
+                const res = await fetch(`/api/weekly-data?date=${DATE_ISO}&user_id=${CURRENT_USER_ID}`);
                 const data = await res.json();
                 if (!data.ok) return;
 
@@ -834,7 +836,7 @@
             const container = document.getElementById('ai-content-area');
             container.innerHTML = '<div style="color:#a78bfa; font-style:italic;">🔮 Connecting to Neural Core...</div>';
             try {
-                const res = await fetch(`/api/insights?date=${DATE_ISO}`);
+                const res = await fetch(`/api/insights?date=${DATE_ISO}&user_id=${CURRENT_USER_ID}`);
                 const data = await res.json();
                 if (data.ok) {
                     container.innerHTML = `<div style="line-height:1.6;">${data.insights.replace(/\n/g, '<br/>')}</div>`;
