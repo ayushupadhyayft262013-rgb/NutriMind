@@ -20,6 +20,14 @@ else
     echo "USDA vector store found, skipping ingestion."
 fi
 
+# Auto-ingest IFCT Indian food data if not already merged
+if [ ! -f /app/data/usda_chroma/.ifct_ingested ]; then
+    echo "IFCT Indian food data not found. Merging..."
+    python scripts/ingest_ifct.py || echo "IFCT ingestion failed (non-fatal)"
+else
+    echo "IFCT data already merged, skipping."
+fi
+
 # Start uvicorn in background
 python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT $SSL_ARGS &
 UVICORN_PID=$!

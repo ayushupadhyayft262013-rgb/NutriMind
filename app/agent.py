@@ -69,71 +69,123 @@ Your job is to analyze food inputs and return ACCURATE nutritional data.
 MANDATORY WORKFLOW (follow every step):
 
 STEP 1 — DECOMPOSE into simple ingredients:
-- Break EVERY dish into its base ingredients with weights in grams.
-- Even "simple" items need decomposition: "2 boiled eggs" → "egg, whole, cooked, hard-boiled, 100g" (2 eggs × 50g each).
-- Complex dishes MUST be broken down: "paneer butter masala" → paneer (100g), butter (15g), tomato (100g), cream (30g), onion (50g), oil (10g), spices (5g).
-- "2 rotis" → wheat flour (60g × 2 = 120g cooked weight).
+- Break EVERY dish into its base ingredients.
+- Even "simple" items need decomposition: "2 boiled eggs" → 2× whole egg.
+- Complex dishes MUST be broken down: "paneer butter masala" → paneer, butter, tomato, cream, onion, oil, spices.
+- Beverages: "milk tea" → milk portion + water + tea leaves (NOT pure milk! Tea is mostly water).
 
 STEP 2 — USDA LOOKUP for each ingredient:
 - Call usda_lookup for EACH individual ingredient.
-- Use simple ingredient names like: "egg", "butter", "rice, white, cooked", "wheat flour", "chicken breast".
+- Use simple ingredient names: "egg white", "butter", "rice, white, cooked", "wheat flour", "chicken breast", "milk, whole".
 - DO NOT skip this step. Even if you know the answer, call usda_lookup first.
+- The tool returns nutrition data per 100g AND standard_portions (e.g., "1 large = 33g, 1 cup = 243g").
 
-STEP 3 — CALCULATE actual portions using calculator:
-- USDA data is ALWAYS per 100g. You MUST use the calculator tool to adjust.
-- Example: 2 eggs = 100g total. USDA says 155 kcal/100g → calculator("155 * 1.0") = 155 kcal.
-- Example: 15g butter. USDA says 717 kcal/100g → calculator("717 * 0.15") = 107.55 kcal.
+STEP 3 — DETERMINE WEIGHT using standard_portions:
+- Read the "standard_portions" field from the usda_lookup response.
+- Match the user's description to the correct standard portion:
+  * "5 egg whites" → standard_portions shows "1 large = 33g" → 5 × 33g = 165g
+  * "1 cup rice" → standard_portions shows "1 cup = 186g" → use 186g
+  * "2 tbsp butter" → standard_portions shows "1 tbsp = 14.2g" → 2 × 14.2g = 28.4g
+- If no standard_portions match the user's description, estimate sensibly.
+- ALWAYS prefer USDA portion weights over your own guesses.
+
+STEP 4 — CALCULATE actual nutrition using calculator:
+- USDA data is per 100g. You MUST scale to the actual weight.
+- Formula: actual_value = value_per_100g × (weight_in_grams / 100)
+- Example: 165g egg white, USDA 52 kcal/100g → calculator("52 * 1.65") = 85.8 kcal
 - Do this for ALL macros (kcal, protein, carbs, fats).
 
-STEP 4 — FALLBACK for unmatched items:
-- If usda_lookup returns no match, estimate using your own knowledge.
+STEP 5 — FALLBACK for unmatched items:
+- If usda_lookup returns no match, estimate using your knowledge.
 - Mark these items with source: "Estimated".
 - Items with USDA data get source: "Verified".
 
-STEP 5 — GROUP and RESPOND:
-- Group identical ingredients into one item with summed macros.
-- Set confidence to 0.95 for USDA-verified items, 0.75-0.85 for estimated items.
+STEP 6 — SELF-CHECK before responding:
+- Verify your calculations make sense:
+  * A cup of tea/coffee should be 15-50 kcal (mostly water!)
+  * A single egg white ≈ 17 kcal (from USDA)
+  * Pure water, tea leaves = 0 kcal
+- If something seems unreasonable, recalculate.
 
-IMPORTANT DEFAULTS (use these exact weights):
-- 1 whole egg (with yolk) ≈ 50g without shell
-- 1 egg WHITE only ≈ 33g (NOT 50g — the white is lighter than the yolk+white)
-- 1 egg YOLK only ≈ 17g
-- 1 roti / chapati ≈ 35g cooked (≈ 30g dry atta/wheat flour + water)
-- 1 bowl rice ≈ 150g cooked
-- 1 glass milk ≈ 200ml ≈ 206g
-- 1 tablespoon oil/ghee ≈ 14g
-- 1 teaspoon sugar ≈ 5g
-- Use Indian portion sizes when region is unclear.
-
-BEVERAGE DECOMPOSITION (CRITICAL — beverages are mostly water, NOT pure milk!):
-- Indian "milk tea / chai" (1 CUP ≈ 150ml, NOT 250ml):
-  → milk (40ml ≈ 41g), water (110ml), tea leaves (2g ≈ 0 cal).
-  Only look up "milk, whole" for the 41g milk portion. Water and tea = 0 cal.
-  Result: ~25 kcal, ~1.3g protein per cup.
-- "coffee with milk" (1 cup ≈ 150ml) → milk (30ml ≈ 31g), water (120ml).
-- "lassi" (1 glass ≈ 200ml) → yogurt/curd (150g), water (50ml), sugar (15g).
-- "buttermilk / chaas" (1 glass ≈ 200ml) → yogurt (40g), water (160ml), salt.
-- "juice" → look up the specific fruit juice directly — do NOT decompose into fruit.
-- Sugar in beverages should ALWAYS be a SEPARATE item.
+BEVERAGE RULES (do NOT hardcode amounts — think about what the beverage actually is):
+- Tea/chai: Mostly water + a small amount of milk. A standard Indian cup is 100-150ml total.
+- Coffee: Mostly water/milk based on type.
+- Lassi: Mostly yogurt + water + sugar.
+- Juice: Look up the specific juice, not the fruit.
 - NEVER treat a mixed beverage as 100% of any single ingredient.
+- Always log sugar as a SEPARATE item if added.
+
+REGIONAL DEFAULTS:
+- Use Indian portion sizes when region is unclear.
 
 YOUR FINAL RESPONSE must be ONLY this JSON (no other text):
 {
   "items": [
     {
-      "name": "2 Boiled Eggs (100g)",
-      "kcal": 155,
-      "protein_g": 12.56,
-      "carbs_g": 1.12,
-      "fats_g": 10.58,
+      "name": "5 Egg Whites (165g)",
+      "kcal": 85.8,
+      "protein_g": 17.99,
+      "carbs_g": 1.2,
+      "fats_g": 0.28,
       "confidence": 0.95,
       "source": "Verified"
     }
   ],
   "clarification_needed": false,
   "clarification_question": null,
-  "notes": "Decomposition: 2 eggs × 50g = 100g. USDA: 155 kcal/100g."
+  "notes": "Used USDA portion: 1 large egg white = 33g. 5 × 33g = 165g."
 }"""
+
+
+# ─── Sanity Validation ────────────────────────────────────────────────────────
+
+BEVERAGE_KEYWORDS = {"tea", "chai", "coffee", "water", "juice", "nimbu", "sharbat", "chaas", "buttermilk"}
+
+def _validate_result(result: dict) -> list[str]:
+    """
+    Validate agent output for unreasonable values.
+    Returns list of error messages (empty = valid).
+    """
+    errors = []
+    items = result.get("items", [])
+
+    for item in items:
+        name = item.get("name", "").lower()
+        kcal = item.get("kcal", 0)
+        protein = item.get("protein_g", 0)
+
+        # Check if it's a beverage
+        is_beverage = any(kw in name for kw in BEVERAGE_KEYWORDS)
+
+        # Beverage sanity: a single serving shouldn't exceed ~150 kcal
+        # (unless it's lassi/milkshake which can be higher)
+        if is_beverage and kcal > 150 and "lassi" not in name and "milkshake" not in name and "shake" not in name:
+            errors.append(
+                f"'{item['name']}' has {kcal} kcal — beverages like tea/coffee should typically be under 100 kcal per cup. "
+                f"Check: is the milk portion too large? Is the cup size realistic?"
+            )
+
+        # Single item sanity: > 1500 kcal for one item is suspicious
+        if kcal > 1500:
+            errors.append(
+                f"'{item['name']}' has {kcal} kcal — this is unusually high for a single item. "
+                f"Verify the portion weight and per-100g values."
+            )
+
+        # Protein sanity: > 100g protein in a single item is suspicious
+        if protein > 100:
+            errors.append(
+                f"'{item['name']}' has {protein}g protein — this is unusually high. Verify calculations."
+            )
+
+        # Zero-calorie food check (except water/tea/spices)
+        non_zero_exceptions = {"water", "tea", "spice", "salt", "pepper"}
+        if kcal == 0 and not any(ex in name for ex in non_zero_exceptions):
+            errors.append(
+                f"'{item['name']}' shows 0 kcal — is this correct? Most foods have calories."
+            )
+
+    return errors
 
 
 def _build_agent():
@@ -185,6 +237,7 @@ async def run_nutrition_agent(text: str, preferences: dict | None = None) -> dic
 
     This is the main entry point called by nutrition_engine.py.
     It handles the full agent loop: reasoning → tool calls → final answer.
+    Includes sanity validation with one retry on failure.
     """
     try:
         llm_with_tools, tools = _build_agent()
@@ -201,42 +254,29 @@ async def run_nutrition_agent(text: str, preferences: dict | None = None) -> dic
             HumanMessage(content=f"Analyze this food: {text}{pref_text}")
         ]
 
-        # Agent loop (max 8 iterations to prevent infinite loops)
-        for i in range(8):
-            response = await asyncio.to_thread(llm_with_tools.invoke, messages)
-            messages.append(response)
+        # Run agent loop (with optional validation retry)
+        for attempt in range(2):  # max 2 attempts (initial + 1 retry)
+            result = await _run_agent_loop(llm_with_tools, tool_map, messages)
 
-            # Check if agent wants to call tools
-            if response.tool_calls:
-                for tc in response.tool_calls:
-                    tool_name = tc["name"]
-                    tool_args = tc["args"]
-                    logger.info(f"Agent tool call [{i}]: {tool_name}({tool_args})")
+            # Validate the result
+            errors = _validate_result(result)
+            if not errors:
+                return result
 
-                    if tool_name in tool_map:
-                        result = tool_map[tool_name].invoke(tool_args)
-                    else:
-                        result = f"Unknown tool: {tool_name}"
-
-                    # Add tool result as a ToolMessage
-                    from langchain_core.messages import ToolMessage
-                    messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
+            if attempt == 0:
+                # First failure: retry with error feedback
+                error_msg = "VALIDATION ERRORS in your response:\n" + "\n".join(f"- {e}" for e in errors)
+                error_msg += "\n\nPlease recalculate and fix these issues. Return corrected JSON."
+                logger.warning(f"Agent validation failed, retrying: {errors}")
+                messages.append(HumanMessage(content=error_msg))
             else:
-                # No more tool calls — agent is done
-                final_text = response.content
-                return _parse_agent_output(final_text)
+                # Second attempt also failed — return anyway with a warning
+                logger.warning(f"Agent validation failed after retry: {errors}")
+                result.setdefault("notes", "")
+                result["notes"] += f" [Warning: values may be inaccurate]"
+                return result
 
-        # If we hit max iterations, try to parse whatever we have
-        logger.warning("Agent hit max iterations")
-        if messages and hasattr(messages[-1], "content"):
-            return _parse_agent_output(messages[-1].content)
-
-        return {
-            "items": [],
-            "clarification_needed": True,
-            "clarification_question": "I couldn't complete the analysis. Please try again.",
-            "notes": "Max iterations reached",
-        }
+        return result
 
     except Exception as e:
         logger.error(f"Agent error: {e}", exc_info=True)
@@ -244,3 +284,42 @@ async def run_nutrition_agent(text: str, preferences: dict | None = None) -> dic
         logger.info("Falling back to direct Gemini analysis...")
         from app.gemini_service import gemini_service
         return await gemini_service.analyze_text(text, preferences)
+
+
+async def _run_agent_loop(llm_with_tools, tool_map: dict, messages: list) -> dict:
+    """Execute the agent tool-calling loop until it produces a final answer."""
+    for i in range(10):  # max 10 iterations
+        response = await asyncio.to_thread(llm_with_tools.invoke, messages)
+        messages.append(response)
+
+        # Check if agent wants to call tools
+        if response.tool_calls:
+            for tc in response.tool_calls:
+                tool_name = tc["name"]
+                tool_args = tc["args"]
+                logger.info(f"Agent tool call [{i}]: {tool_name}({tool_args})")
+
+                if tool_name in tool_map:
+                    result = tool_map[tool_name].invoke(tool_args)
+                else:
+                    result = f"Unknown tool: {tool_name}"
+
+                # Add tool result as a ToolMessage
+                from langchain_core.messages import ToolMessage
+                messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
+        else:
+            # No more tool calls — agent is done
+            final_text = response.content
+            return _parse_agent_output(final_text)
+
+    # If we hit max iterations, try to parse whatever we have
+    logger.warning("Agent hit max iterations")
+    if messages and hasattr(messages[-1], "content"):
+        return _parse_agent_output(messages[-1].content)
+
+    return {
+        "items": [],
+        "clarification_needed": True,
+        "clarification_question": "I couldn't complete the analysis. Please try again.",
+        "notes": "Max iterations reached",
+    }

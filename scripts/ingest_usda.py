@@ -2,11 +2,13 @@
 USDA FoodData Central → Numpy Vector Store Ingestion.
 
 Downloads the USDA SR Legacy dataset, extracts nutrition data,
-embeds food descriptions using Google text-embedding-004,
+embeds food descriptions using Google gemini-embedding-001,
 and stores as numpy arrays + JSON metadata.
+Also parses food_portion.csv for standard serving sizes.
 
 Usage:
-    python scripts/ingest_usda.py
+    python scripts/ingest_usda.py          # skip if already exists
+    python scripts/ingest_usda.py --force  # re-ingest from scratch
 """
 
 import csv
@@ -126,6 +128,70 @@ def parse_nutrients(extract_dir: str, foods: dict[str, dict]) -> None:
     logger.info(f"Matched {matched} nutrient values")
 
 
+def parse_portions(extract_dir: str, foods: dict[str, dict]) -> None:
+    """Parse food_portion.csv to get standard portion sizes per food."""
+    portion_csv = None
+    for root, _, files in os.walk(extract_dir):
+        for f in files:
+            if f.lower() == "food_portion.csv":
+                portion_csv = os.path.join(root, f)
+                break
+
+    if not portion_csv:
+        logger.warning("food_portion.csv not found — skipping portion data")
+        return
+
+    logger.info(f"Parsing portions from {portion_csv}...")
+
+    matched = 0
+    with open(portion_csv, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            fdc_id = row.get("fdc_id", "")
+            desc = row.get("portion_description", "").strip()
+            amount = row.get("amount", "1").strip()
+            gram_weight = row.get("gram_weight", "")
+
+            if fdc_id not in foods or not gram_weight:
+                continue
+
+            try:
+                grams = round(float(gram_weight), 1)
+            except ValueError:
+                continue
+
+            if grams <= 0:
+                continue
+
+            # Build portion label: combine amount + description
+            try:
+                amt = float(amount)
+                if amt != 1.0 and desc:
+                    label = f"{amount} {desc}"
+                elif desc:
+                    label = desc
+                else:
+                    continue  # skip entries with no description
+            except ValueError:
+                if not desc:
+                    continue
+                label = desc
+
+            if not label:
+                continue
+
+            if "portions" not in foods[fdc_id]:
+                foods[fdc_id]["portions"] = []
+
+            foods[fdc_id]["portions"].append({
+                "desc": label,
+                "g": grams,
+            })
+            matched += 1
+
+    logger.info(f"Matched {matched} portion entries")
+
+
 def generate_embeddings(foods: list[dict], api_key: str) -> np.ndarray:
     """Generate embeddings for all food descriptions using Google API."""
     from google import genai
@@ -165,14 +231,17 @@ def save_vector_store(foods: list[dict], embeddings: np.ndarray, output_dir: str
     # Save metadata as JSON
     metadata = []
     for f in foods:
-        metadata.append({
+        entry = {
             "fdc_id": f["fdc_id"],
             "description": f["description"],
             "kcal": f["kcal"],
             "protein": f["protein"],
             "carbs": f["carbs"],
             "fats": f["fats"],
-        })
+        }
+        if f.get("portions"):
+            entry["portions"] = f["portions"]
+        metadata.append(entry)
 
     with open(os.path.join(output_dir, "metadata.json"), "w", encoding="utf-8") as f:
         json.dump(metadata, f)
@@ -185,15 +254,16 @@ def save_vector_store(foods: list[dict], embeddings: np.ndarray, output_dir: str
 def main():
     from app.config import settings
 
+    force = "--force" in sys.argv
     extract_dir = "data/usda_raw"
-    output_dir = settings.USDA_CHROMA_PATH  # reusing the config key name
+    output_dir = settings.USDA_CHROMA_PATH
 
-    # Skip if vector store already exists
+    # Skip if vector store already exists (unless --force)
     emb_path = os.path.join(output_dir, "embeddings.npz")
     meta_path = os.path.join(output_dir, "metadata.json")
-    if os.path.exists(emb_path) and os.path.exists(meta_path):
-        logger.info(f"✅ USDA vector store already exists at {output_dir}, skipping ingestion.")
-        logger.info("   To force re-ingestion, delete the directory and re-run.")
+    if not force and os.path.exists(emb_path) and os.path.exists(meta_path):
+        logger.info(f"✅ USDA vector store already exists at {output_dir}, skipping.")
+        logger.info("   Use --force to re-ingest.")
         return
 
     # Step 1: Download
@@ -205,18 +275,23 @@ def main():
     # Step 3: Parse nutrients
     parse_nutrients(extract_dir, foods)
 
-    # Step 4: Filter foods with calorie data
+    # Step 4: Parse portions (NEW)
+    parse_portions(extract_dir, foods)
+
+    # Step 5: Filter foods with calorie data
     valid_foods = [v for v in foods.values() if v["kcal"] > 0]
     logger.info(f"Foods with calorie data: {len(valid_foods)}")
+    foods_with_portions = sum(1 for f in valid_foods if f.get("portions"))
+    logger.info(f"Foods with portion data: {foods_with_portions}")
 
-    # Step 5: Generate embeddings
+    # Step 6: Generate embeddings
     logger.info("Generating embeddings (this may take a few minutes)...")
     embeddings = generate_embeddings(valid_foods, settings.GEMINI_API_KEY)
 
-    # Step 6: Save vector store
+    # Step 7: Save vector store
     save_vector_store(valid_foods, embeddings, output_dir)
 
-    logger.info("🎉 USDA ingestion complete!")
+    logger.info("🎉 USDA ingestion complete (with portion data)!")
 
 
 if __name__ == "__main__":

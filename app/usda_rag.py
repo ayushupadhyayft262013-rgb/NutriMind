@@ -75,8 +75,8 @@ class USDAService:
         """
         Search USDA database for a single food item using cosine similarity.
 
-        Returns dict with kcal/protein/carbs/fats per 100g if match is confident,
-        or None if no good match found.
+        Returns dict with kcal/protein/carbs/fats per 100g and standard portions
+        if match is confident, or None if no good match found.
         """
         self._load()
 
@@ -103,11 +103,11 @@ class USDAService:
 
         match = self._metadata[best_idx]
 
-        # Threshold: 0.80 cosine similarity (configurable)
+        # Threshold: cosine similarity (configurable)
         threshold = settings.USDA_MATCH_THRESHOLD
         if best_score >= threshold:
             logger.info(f"USDA match: '{food_name}' → '{match['description']}' (sim={best_score:.3f})")
-            return {
+            result = {
                 "name": match["description"],
                 "kcal": match.get("kcal", 0),
                 "protein": match.get("protein", 0),
@@ -116,6 +116,10 @@ class USDAService:
                 "source": "Verified",
                 "similarity": round(best_score, 3),
             }
+            # Include portion data if available
+            if match.get("portions"):
+                result["portions"] = match["portions"]
+            return result
         else:
             logger.info(f"USDA no match: '{food_name}' best='{match['description']}' (sim={best_score:.3f})")
             return None
@@ -123,11 +127,11 @@ class USDAService:
     def lookup_as_text(self, food_name: str) -> str:
         """
         LangChain tool-friendly version.
-        Returns a JSON string for the agent to parse.
+        Returns a JSON string with nutrition data AND standard portion sizes.
         """
         result = self.lookup(food_name)
         if result:
-            return json.dumps({
+            response = {
                 "found": True,
                 "usda_name": result["name"],
                 "kcal_per_100g": result["kcal"],
@@ -135,7 +139,16 @@ class USDAService:
                 "carbs_per_100g": result["carbs"],
                 "fats_per_100g": result["fats"],
                 "source": "USDA Verified",
-            })
+            }
+            # Format portions as readable string for the agent
+            if result.get("portions"):
+                portions_str = ", ".join(
+                    f"{p['desc']} = {p['g']}g" for p in result["portions"][:5]  # limit to 5
+                )
+                response["standard_portions"] = portions_str
+            else:
+                response["standard_portions"] = "No portion data. Estimate weight using your knowledge."
+            return json.dumps(response)
         else:
             return json.dumps({
                 "found": False,
