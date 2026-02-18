@@ -94,20 +94,27 @@ STEP 5 — GROUP and RESPOND:
 - Group identical ingredients into one item with summed macros.
 - Set confidence to 0.95 for USDA-verified items, 0.75-0.85 for estimated items.
 
-IMPORTANT DEFAULTS:
-- 1 boiled egg ≈ 50g (without shell)
-- 1 roti ≈ 60g cooked (30g dry wheat flour)
+IMPORTANT DEFAULTS (use these exact weights):
+- 1 whole egg (with yolk) ≈ 50g without shell
+- 1 egg WHITE only ≈ 33g (NOT 50g — the white is lighter than the yolk+white)
+- 1 egg YOLK only ≈ 17g
+- 1 roti / chapati ≈ 35g cooked (≈ 30g dry atta/wheat flour + water)
 - 1 bowl rice ≈ 150g cooked
-- 1 glass milk ≈ 250ml ≈ 258g
+- 1 glass milk ≈ 200ml ≈ 206g
+- 1 tablespoon oil/ghee ≈ 14g
+- 1 teaspoon sugar ≈ 5g
 - Use Indian portion sizes when region is unclear.
 
-BEVERAGE DECOMPOSITION (CRITICAL — do NOT treat beverages as pure milk!):
-- "milk tea" / "chai" (1 cup ≈ 250ml) → water (170ml, 0 cal), milk (80ml ≈ 82g), tea leaves (2g, ~0 cal). Only look up "milk" for the milk portion.
-- "coffee with milk" (1 cup ≈ 250ml) → water (200ml, 0 cal), milk (50ml ≈ 51g).
-- "lassi" (1 glass ≈ 250ml) → yogurt/curd (200g), water (50ml), sugar (10g).
-- "buttermilk / chaas" (1 glass ≈ 250ml) → yogurt (50g), water (200ml), salt.
-- "juice" → look up the specific fruit juice, not the whole fruit.
-- Sugar in beverages should be a SEPARATE item (1 tsp sugar ≈ 5g).
+BEVERAGE DECOMPOSITION (CRITICAL — beverages are mostly water, NOT pure milk!):
+- Indian "milk tea / chai" (1 CUP ≈ 150ml, NOT 250ml):
+  → milk (40ml ≈ 41g), water (110ml), tea leaves (2g ≈ 0 cal).
+  Only look up "milk, whole" for the 41g milk portion. Water and tea = 0 cal.
+  Result: ~25 kcal, ~1.3g protein per cup.
+- "coffee with milk" (1 cup ≈ 150ml) → milk (30ml ≈ 31g), water (120ml).
+- "lassi" (1 glass ≈ 200ml) → yogurt/curd (150g), water (50ml), sugar (15g).
+- "buttermilk / chaas" (1 glass ≈ 200ml) → yogurt (40g), water (160ml), salt.
+- "juice" → look up the specific fruit juice directly — do NOT decompose into fruit.
+- Sugar in beverages should ALWAYS be a SEPARATE item.
 - NEVER treat a mixed beverage as 100% of any single ingredient.
 
 YOUR FINAL RESPONSE must be ONLY this JSON (no other text):
