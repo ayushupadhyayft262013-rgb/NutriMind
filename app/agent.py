@@ -94,6 +94,9 @@ STEP 4 — CALCULATE actual nutrition using calculator:
 - Formula: actual_value = value_per_100g × (weight_in_grams / 100)
 - Example: 165g egg white, USDA 52 kcal/100g → calculator("52 * 1.65") = 85.8 kcal
 - Do this for ALL macros (kcal, protein, carbs, fats).
+- EFFICIENCY: Calculate all macros for one ingredient in a SINGLE calculator call:
+  calculator("52 * 1.65") for kcal, then calculator("10.9 * 1.65") for protein, etc.
+  Or combine: calculator("52 * 1.65") → 85.8 kcal. You can also do mental math for simple cases.
 
 STEP 5 — FALLBACK for unmatched items:
 - If usda_lookup returns no match, estimate using your knowledge.
@@ -288,7 +291,7 @@ async def run_nutrition_agent(text: str, preferences: dict | None = None) -> dic
 
 async def _run_agent_loop(llm_with_tools, tool_map: dict, messages: list) -> dict:
     """Execute the agent tool-calling loop until it produces a final answer."""
-    for i in range(10):  # max 10 iterations
+    for i in range(25):  # max 25 iterations (complex dishes need many tool calls)
         response = await asyncio.to_thread(llm_with_tools.invoke, messages)
         messages.append(response)
 
