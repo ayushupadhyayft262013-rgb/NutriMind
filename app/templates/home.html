@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+{% block title %}Daily Playground - NutriMind{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex flex-col p-6 overflow-y-auto hide-scrollbar">
+
+    <!-- User/Date Header -->
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-display font-bold text-text-main dark:text-text-bright">
+                Hello, <span class="text-primary">{{ user.name if user else 'Guest' }}</span>!
+            </h1>
+            <div class="flex items-center gap-2 mt-1">
+                <a href="/dashboard?date={{ prev_date }}&user_id={{ current_user_id }}"
+                    class="text-text-muted hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-sm">arrow_back_ios</span>
+                </a>
+                <p class="text-sm font-medium text-text-muted">{{ date }}</p>
+                <a href="/dashboard?date={{ next_date }}&user_id={{ current_user_id }}"
+                    class="text-text-muted hover:text-primary transition-colors {{ 'opacity-50 pointer-events-none' if is_today }}">
+                    <span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
+                </a>
+            </div>
+        </div>
+        <button
+            class="w-10 h-10 rounded-full bg-surface dark:bg-twilight-surface shadow-soft flex items-center justify-center border border-white/50 dark:border-white/5 relative group">
+            <span class="material-symbols-outlined text-text-main dark:text-text-bright">notifications</span>
+            <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border border-white"></span>
+        </button>
+    </header>
+
+    <!-- Calorie Donut Ring -->
+    <div class="relative flex flex-col items-center justify-center mb-10">
+        <div class="relative w-64 h-64 flex items-center justify-center">
+            <!-- Blur Glow -->
+            <div class="absolute inset-0 bg-primary/20 dark:bg-primary/10 rounded-full blur-3xl scale-75"></div>
+
+            <svg class="w-full h-full transform -rotate-90 drop-shadow-lg" viewBox="0 0 100 100">
+                <!-- Track -->
+                <circle cx="50" cy="50" r="40" fill="none" class="stroke-surface-alt dark:stroke-white/5"
+                    stroke-width="8" stroke-linecap="round"></circle>
+                <!-- Progress -->
+                <circle id="calorie-ring" cx="50" cy="50" r="40" fill="none"
+                    class="stroke-primary transition-all duration-1000 ease-out" stroke-width="8" stroke-linecap="round"
+                    stroke-dasharray="251.2" stroke-dashoffset="{{ ring_offset }}"></circle>
+            </svg>
+
+            <!-- Center Content -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span class="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">Remaining</span>
+                <span class="text-4xl font-display font-bold text-text-main dark:text-text-bright">{{ remaining_kcal
+                    }}</span>
+                <span class="text-xs font-medium text-text-muted mt-1">kcal / {{ target_kcal }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Macro Pills -->
+    <div class="grid grid-cols-3 gap-3 mb-10">
+        <!-- Protein -->
+        <div
+            class="bg-surface dark:bg-twilight-surface rounded-2xl p-3 flex flex-col items-center shadow-soft border border-white/40 dark:border-white/5">
+            <span class="text-xs font-bold text-text-muted mb-1">Protein</span>
+            <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
+                <div class="h-full bg-accent-protein w-[{{ protein_pct }}%]"></div>
+            </div>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_protein }}g</span>
+        </div>
+        <!-- Carbs -->
+        <div
+            class="bg-surface dark:bg-twilight-surface rounded-2xl p-3 flex flex-col items-center shadow-soft border border-white/40 dark:border-white/5">
+            <span class="text-xs font-bold text-text-muted mb-1">Carbs</span>
+            <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
+                <div class="h-full bg-accent-carbs w-[{{ carbs_pct }}%]"></div>
+            </div>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_carbs }}g</span>
+        </div>
+        <!-- Fats -->
+        <div
+            class="bg-surface dark:bg-twilight-surface rounded-2xl p-3 flex flex-col items-center shadow-soft border border-white/40 dark:border-white/5">
+            <span class="text-xs font-bold text-text-muted mb-1">Fats</span>
+            <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
+                <div class="h-full bg-accent-fats w-[{{ fats_pct }}%]"></div>
+            </div>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_fats }}g</span>
+        </div>
+    </div>
+
+    <!-- Meals Grid -->
+    <h3 class="font-display font-bold text-lg text-text-main dark:text-text-bright mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">restaurant_menu</span>
+        Today's Menu
+    </h3>
+
+    <div class="grid grid-cols-2 gap-4">
+        <!-- Add Meal Button -->
+        <a href="/pantry"
+            class="aspect-square bg-surface dark:bg-twilight-surface rounded-pod border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary transition-all group cursor-pointer bouncy-click">
+            <div
+                class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <span class="material-symbols-outlined">add</span>
+            </div>
+            <span class="font-bold text-sm text-text-main dark:text-text-bright">Log Food</span>
+        </a>
+
+        {% if meals %}
+        {% for meal in meals %}
+        <div
+            class="aspect-square bg-white dark:bg-twilight-surface rounded-pod p-4 shadow-soft flex flex-col justify-between border border-white/50 dark:border-white/5 relative overflow-hidden group">
+            <!-- Hover Actions -->
+            <div
+                class="absolute top-2 right-2 flex gap-1 transform translate-x-10 group-hover:translate-x-0 transition-transform duration-300">
+                <button onclick="editMeal('{{ meal.block_id }}')"
+                    class="w-6 h-6 rounded-full bg-surface-alt dark:bg-white/10 flex items-center justify-center text-text-muted hover:text-primary">
+                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                </button>
+            </div>
+
+            <!-- Icon/Emoji -->
+            <div class="text-3xl">🥣</div>
+
+            <div>
+                <h4 class="font-bold text-text-main dark:text-text-bright text-sm leading-tight line-clamp-2">{{
+                    meal.name }}</h4>
+                <p class="text-xs text-text-muted mt-1">{{ meal.kcal }} kcal</p>
+            </div>
+
+            <!-- Macro mini-bar -->
+            <div class="flex gap-1 h-1 w-full rounded-full overflow-hidden mt-2 bg-surface-alt dark:bg-white/5">
+                <div class="bg-accent-protein h-full"
+                    style="width: {{ (meal.protein / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+                <div class="bg-accent-carbs h-full"
+                    style="width: {{ (meal.carbs / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+                <div class="bg-accent-fats h-full"
+                    style="width: {{ (meal.fats / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <!-- Empty State -->
+        <div class="col-span-1 aspect-square flex items-center justify-center text-center p-4">
+            <p class="text-xs text-text-muted italic">No meals tracked yet. Start exploring the pantry!</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- logic script placeholder -->
+{% endblock %}

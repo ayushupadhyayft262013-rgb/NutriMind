@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile &amp; Settings - Organic Soft-Play Tracker</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec4d13", // Terracotta Pop (from User Config)
+                        "background-light": "#FDF6F0", // Almond Milk (from PRD)
+                        "background-dark": "#2C1E16", // Deep Warm Brown
+                        "surface-light": "#FFFBF7", // Whipped Cream
+                        "surface-dark": "#3D2B22", // Dark Roast Light
+                        "text-main": "#4A3B32", // Dark Roast
+                        "text-muted": "#9C8C74", // Cardboard
+                        "accent-protein": "#FFB347",
+                        "accent-carbs": "#AECBFA",
+                        "accent-fats": "#C5E1A5",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Plus Jakarta Sans", "sans-serif"], // Using Plus Jakarta to match requested config
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem", 
+                        "lg": "1.5rem", 
+                        "xl": "2rem", 
+                        "2xl": "2.5rem",
+                        "3xl": "3rem",
+                        "pod": "24px",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 10px 40px -10px rgba(74, 59, 50, 0.08)",
+                        "float": "0 20px 40px -12px rgba(74, 59, 50, 0.15)",
+                        "inner-pressed": "inset 0 4px 8px rgba(74, 59, 50, 0.1)",
+                        "glow": "0 0 0 4px rgba(236, 77, 19, 0.15)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom noise texture overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Soft bouncy animation classes */
+        .animate-bounce-soft {
+            animation: bounce-soft 2s infinite;
+        }
+        @keyframes bounce-soft {
+            0%, 100% { transform: translateY(-3%); }
+            50% { transform: translateY(0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white font-display antialiased selection:bg-primary/20 transition-colors duration-300">
+<div class="noise-overlay"></div>
+<div class="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-transparent overflow-x-hidden shadow-2xl">
+<!-- Header -->
+<header class="flex items-center justify-between px-6 pt-8 pb-4 z-10 sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+<button class="flex items-center justify-center w-12 h-12 rounded-full bg-surface-light dark:bg-surface-dark text-text-main dark:text-white shadow-soft hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight text-text-main dark:text-white">Me &amp; My Goals</h1>
+<button class="flex items-center justify-center w-12 h-12 rounded-full bg-surface-light dark:bg-surface-dark text-text-main dark:text-white shadow-soft hover:scale-105 transition-transform relative">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span class="absolute top-3 right-3 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white dark:border-surface-dark"></span>
+</button>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex-1 px-5 pb-32 flex flex-col gap-6 z-0">
+<!-- Profile Card -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-3xl shadow-float flex flex-col items-center gap-4 relative overflow-hidden group">
+<!-- Decorative Blob -->
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
+<div class="relative">
+<div class="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white dark:border-background-dark shadow-soft rotate-3 group-hover:rotate-0 transition-transform duration-500">
+<img alt="Portrait of a young woman smiling softly" class="w-full h-full object-cover" data-alt="Portrait of a young woman smiling softly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8IGM231OuYTHgCG0Pcp6YCUBZDeLcU4NPeybf1wsj56V0Hm-k6n03LGBgx14oFOYccLB68LN8E16AR8_S3U7RNWJzgcCg4FYUVONd9YD3NdmTbVyA9VhdeX5zs9ypGKBcOvIflMuYuLrdTtSL2EYvPd1kkj8VI9AxIvgIVLkeQVSDoAKBORcPTX-nLogLm_OSwnah7AIH78Qno6mekWCldBqRVLrZvQkQhraV4NGTE2kTGjyaJ5Ad379rKPEFpqOD5nNAOjMA6g"/>
+</div>
+<button class="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-background-dark hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<div class="text-center w-full">
+<label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">Hello, I am</label>
+<input class="w-full text-center text-2xl font-extrabold bg-transparent border-none focus:ring-0 p-0 text-text-main dark:text-white placeholder-text-muted/50" placeholder="Your Name" type="text" value="Sarah J."/>
+</div>
+</div>
+<!-- Goal Setter (Dial Metaphor) -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-2">
+<h2 class="text-lg font-bold text-text-main dark:text-white">Current Focus</h2>
+<span class="text-xs font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">Adjust anytime</span>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-3xl shadow-float relative overflow-hidden">
+<!-- Dial UI -->
+<div class="relative flex items-center justify-center py-4">
+<!-- Background Track -->
+<div class="w-64 h-32 border-t-[16px] border-r-[16px] border-l-[16px] border-surface-alt/20 dark:border-white/5 rounded-t-full absolute top-4 box-border"></div>
+<!-- Active Track (Simulated with gradient border or SVG) -->
+<svg class="w-64 h-32 absolute top-4" viewbox="0 0 200 100">
+<path class="dark:stroke-white/10" d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="#EADBC8" stroke-linecap="round" stroke-width="12"></path>
+<!-- Active segment -->
+<path d="M 100 100 A 90 90 0 0 0 163.6 36.4" fill="none" stroke="#ec4d13" stroke-linecap="round" stroke-width="12"></path>
+</svg>
+<!-- Knob / Indicator -->
+<div class="absolute top-[28px] right-[48px] w-8 h-8 bg-white dark:bg-text-main rounded-full shadow-lg border-4 border-primary z-10 cursor-pointer hover:scale-110 transition-transform"></div>
+<!-- Center Info -->
+<div class="flex flex-col items-center justify-end h-32 pt-12 z-0 mt-8">
+<span class="text-4xl font-black text-text-main dark:text-white tracking-tight">Maintain</span>
+<span class="text-sm font-medium text-text-muted mt-1">Steady &amp; Strong</span>
+</div>
+</div>
+<!-- Labels -->
+<div class="flex justify-between w-full px-8 mt-2 text-xs font-bold text-text-muted uppercase tracking-wider">
+<span>Lose</span>
+<span class="text-primary">Maintain</span>
+<span>Gain</span>
+</div>
+</div>
+</section>
+<!-- Dietary Preferences (Pills) -->
+<section class="flex flex-col gap-3">
+<h2 class="text-lg font-bold text-text-main dark:text-white px-2">How do you eat?</h2>
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-3xl shadow-float">
+<div class="flex flex-wrap gap-3">
+<!-- Active Pill -->
+<button class="group flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-white shadow-lg shadow-primary/30 transform active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px] filled">check</span>
+<span class="font-bold text-sm">Vegetarian</span>
+</button>
+<!-- Inactive Pill -->
+<button class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-background-light dark:bg-background-dark text-text-main dark:text-white border border-transparent hover:border-primary/20 transform active:scale-95 transition-all shadow-sm hover:shadow-md">
+<span class="font-semibold text-sm">Vegan</span>
+</button>
+<!-- Inactive Pill -->
+<button class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-background-light dark:bg-background-dark text-text-main dark:text-white border border-transparent hover:border-primary/20 transform active:scale-95 transition-all shadow-sm hover:shadow-md">
+<span class="font-semibold text-sm">Keto</span>
+</button>
+<!-- Inactive Pill -->
+<button class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-background-light dark:bg-background-dark text-text-main dark:text-white border border-transparent hover:border-primary/20 transform active:scale-95 transition-all shadow-sm hover:shadow-md">
+<span class="font-semibold text-sm">Paleo</span>
+</button>
+<!-- Active Pill -->
+<button class="group flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-white shadow-lg shadow-primary/30 transform active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px] filled">check</span>
+<span class="font-bold text-sm">Gluten-Free</span>
+</button>
+<!-- Inactive Pill -->
+<button class="flex items-center gap-2 px-5 py-3 rounded-2xl bg-background-light dark:bg-background-dark text-text-main dark:text-white border border-transparent hover:border-primary/20 transform active:scale-95 transition-all shadow-sm hover:shadow-md">
+<span class="font-semibold text-sm">Dairy-Free</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Theme Switcher (Ambiance) -->
+<section class="flex flex-col gap-3">
+<h2 class="text-lg font-bold text-text-main dark:text-white px-2">Ambiance</h2>
+<div class="bg-surface-light dark:bg-surface-dark p-2 rounded-full shadow-inner-pressed flex items-center justify-between relative h-16 w-full cursor-pointer">
+<!-- Toggle Slider Background -->
+<div class="absolute inset-0 rounded-full bg-background-light dark:bg-black/20 shadow-inner"></div>
+<!-- Active Toggle (Animated Position) -->
+<div class="absolute left-1 top-1 bottom-1 w-[50%] bg-white dark:bg-surface-dark rounded-full shadow-lg z-10 transition-all duration-300 transform translate-x-0 dark:translate-x-[96%] flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[28px] animate-pulse dark:hidden">wb_sunny</span>
+<span class="material-symbols-outlined text-accent-protein text-[28px] hidden dark:block">bedtime</span>
+</div>
+<!-- Labels -->
+<div class="flex-1 flex items-center justify-center z-20 opacity-100 dark:opacity-50 transition-opacity">
+<span class="text-sm font-bold text-text-main dark:text-white/50">Sunrise</span>
+</div>
+<div class="flex-1 flex items-center justify-center z-20 opacity-50 dark:opacity-100 transition-opacity">
+<span class="text-sm font-bold text-text-muted dark:text-white">Sunset</span>
+</div>
+</div>
+</section>
+<!-- Danger Zone -->
+<div class="mt-4 px-2">
+<button class="text-sm font-medium text-text-muted hover:text-red-500 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                    Log Out
+                </button>
+</div>
+</main>
+<!-- Sticky Footer CTA -->
+<div class="fixed bottom-0 left-0 right-0 p-6 pt-0 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark z-20 pointer-events-none flex justify-center max-w-md mx-auto">
+<button class="pointer-events-auto w-full bg-text-main dark:bg-primary text-white h-14 rounded-full font-bold text-lg shadow-xl shadow-text-main/20 dark:shadow-primary/30 flex items-center justify-center gap-2 transform active:scale-95 hover:-translate-y-1 transition-all">
+                Update Playground
+            </button>
+</div>
+<!-- Bottom Nav Bar (From provided component list) -->
+<div class="fixed bottom-0 w-full z-30 max-w-md mx-auto bg-surface-light dark:bg-surface-dark border-t border-black/5 dark:border-white/5">
+<div class="flex gap-2 px-4 pb-6 pt-3 justify-around">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-text-muted hover:text-primary transition-colors group" href="#">
+<div class="flex h-8 items-center justify-center group-hover:bg-primary/10 rounded-full w-12 transition-colors">
+<span class="material-symbols-outlined text-[26px]">home</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Playground</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-muted hover:text-primary transition-colors group" href="#">
+<div class="flex h-8 items-center justify-center group-hover:bg-primary/10 rounded-full w-12 transition-colors">
+<span class="material-symbols-outlined text-[26px]">add_circle</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Add</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-muted hover:text-primary transition-colors group" href="#">
+<div class="flex h-8 items-center justify-center group-hover:bg-primary/10 rounded-full w-12 transition-colors">
+<span class="material-symbols-outlined text-[26px]">potted_plant</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Garden</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center bg-primary/10 rounded-full w-12">
+<span class="material-symbols-outlined text-[26px] fill-current">person</span>
+</div>
+<p class="text-xs font-bold leading-normal tracking-[0.015em]">Profile</p>
+</a>
+</div>
+</div>
+</div>
+<!-- Script to toggle dark mode for demo purposes -->
+<script>
+        // Simple toggle logic for the demo visualization
+        const themeToggle = document.querySelector('.bg-surface-light.p-2.rounded-full.cursor-pointer');
+        if(themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+        }
+    </script>
+</body></html>

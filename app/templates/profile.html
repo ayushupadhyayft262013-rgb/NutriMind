@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block title %}Profile - NutriMind{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex flex-col p-6 overflow-y-auto hide-scrollbar">
+
+    <!-- Profile Header -->
+    <div class="flex flex-col items-center mb-8">
+        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-orange-400 p-1 mb-4 shadow-glow-primary">
+            <div
+                class="w-full h-full rounded-full bg-surface dark:bg-twilight-surface flex items-center justify-center overflow-hidden">
+                <span class="text-4xl">🧑‍🌾</span>
+            </div>
+        </div>
+        <h1 class="text-xl font-display font-bold text-text-main dark:text-text-bright">{{ user.name }}</h1>
+        <p class="text-sm text-text-muted font-medium">Main Quest: <span class="text-primary">{{ user.goal|capitalize
+                }}</span></p>
+    </div>
+
+    <!-- Stats Grid (Editable) -->
+    <form action="/api/profile/update" method="POST"
+        class="bg-surface dark:bg-twilight-surface rounded-pod p-5 shadow-soft border border-white/40 dark:border-white/5 mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-display font-bold text-lg text-text-main dark:text-text-bright">Vital Stats</h3>
+            <button type="submit"
+                class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full hover:bg-primary hover:text-white transition-colors">SAVE
+                CHANGES</button>
+        </div>
+
+        <input type="hidden" name="user_id" value="{{ user.telegram_user_id }}">
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Weight (kg)</label>
+                <input type="number" step="0.1" name="weight" value="{{ user.weight_kg }}"
+                    class="w-full bg-surface-alt dark:bg-white/5 rounded-xl border-none text-text-main dark:text-text-bright font-bold p-3 focus:ring-1 focus:ring-primary">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Target Kcal</label>
+                <input type="number" name="target_kcal" value="{{ user.target_kcal }}"
+                    class="w-full bg-surface-alt dark:bg-white/5 rounded-xl border-none text-text-main dark:text-text-bright font-bold p-3 focus:ring-1 focus:ring-primary">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Protein (g)</label>
+                <input type="number" name="protein" value="{{ user.target_protein }}"
+                    class="w-full bg-surface-alt dark:bg-white/5 rounded-xl border-none text-text-main dark:text-text-bright font-bold p-3 focus:ring-1 focus:ring-primary">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Age</label>
+                <input type="number" name="age" value="{{ user.age }}"
+                    class="w-full bg-surface-alt dark:bg-white/5 rounded-xl border-none text-text-main dark:text-text-bright font-bold p-3 focus:ring-1 focus:ring-primary">
+            </div>
+        </div>
+    </form>
+
+    <!-- Ambiance Toggle -->
+    <div class="bg-surface dark:bg-twilight-surface rounded-2xl p-4 flex items-center justify-between shadow-soft border border-white/40 dark:border-white/5 cursor-pointer hover:border-primary/50 transition-all"
+        onclick="toggleTheme()">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">dark_mode</span>
+            </div>
+            <div>
+                <h4 class="font-bold text-text-main dark:text-text-bright text-sm">Ambiance</h4>
+                <p class="text-xs text-text-muted">Tap to switch Sunrise / Twilight</p>
+            </div>
+        </div>
+        <div class="w-12 h-6 bg-surface-alt dark:bg-primary rounded-full relative transition-colors">
+            <div
+                class="absolute top-1 left-1 dark:left-7 w-4 h-4 bg-text-muted dark:bg-white rounded-full transition-all shadow-sm">
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

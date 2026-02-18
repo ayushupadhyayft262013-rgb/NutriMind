@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile &amp; Settings - The Garden</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&amp;family=Quicksand:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FF8B66",
+                        "twilight-bg": "#0A0F1A",
+                        "twilight-surface": "#141C2D",
+                        "twilight-accent": "#1E293B",
+                        "neon-green": "#4ADE80",
+                        "neon-amber": "#FBBF24",
+                        "neon-teal": "#2DD4BF",
+                        "text-bright": "#FDF6F0",
+                        "text-dim": "#94A3B8",
+                    },
+                    fontFamily: {
+                        "display": ["Fredoka", "sans-serif"],
+                        "body": ["Quicksand", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px",
+                        "pod": "24px",
+                    },
+                    boxShadow: {
+                        "glow-green": "0 0 15px rgba(74, 222, 128, 0.3)",
+                        "glow-amber": "0 0 15px rgba(251, 191, 36, 0.3)",
+                        "glow-primary": "0 0 20px rgba(255, 139, 102, 0.4)",
+                        "glow-white": "0 0 15px rgba(255, 255, 255, 0.15)",
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: theme('colors.twilight-bg');
+            color: theme('colors.text-bright');
+        }
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .profile-border-glow {
+            position: relative;
+        }
+        .profile-border-glow::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: linear-gradient(45deg, #4ADE80, #2DD4BF, #FBBF24, #FF8B66);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.7;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: 100dvh;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-primary/30">
+<header class="pt-12 px-6 pb-6 text-center">
+<div class="flex items-center justify-between mb-8">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-twilight-surface text-text-bright border border-white/5">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<h1 class="text-xl font-display font-semibold text-text-bright">Profile</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-twilight-surface text-text-bright border border-white/5">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="relative inline-block mb-4">
+<div class="profile-border-glow">
+<div class="w-28 h-28 rounded-full overflow-hidden border-4 border-twilight-bg relative z-10">
+<img alt="Profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr3x0MEg9b5-FuY0yEpaZLipH3DNbvH9t8EqUpJl9CYr3I66ShSb9WxJrRhAiQI01NYeVCZeJoVk36NCcQJVIu_6zP7bxSnF_83kb1LoiDqdH_6lsGMcNezTV2e-1jfh-1aX2lbyz6cJPd5ZgUrRejthZ99HMA_w91kNaLxfmeRsdbSsxnYRQTdeOzku-QgqxVHdvW2rqFwauCjDF75dO4qmRvV8AqhYy-566z_ZwlTuS0P4-Cq0V3SqI5m3I6WOdxUAWr9sWKAA"/>
+</div>
+</div>
+<div class="absolute bottom-1 right-1 w-8 h-8 bg-neon-green rounded-full border-4 border-twilight-bg flex items-center justify-center z-20">
+<span class="material-symbols-outlined text-twilight-bg text-[14px] font-bold">edit</span>
+</div>
+</div>
+<h2 class="text-2xl font-display font-bold text-text-bright mt-2">Arlo Greenhouse</h2>
+<p class="text-neon-green font-medium text-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px] fill-1">eco</span>
+        Level 24 Master Gardener
+    </p>
+</header>
+<main class="flex-1 px-6 pb-32">
+<div class="grid grid-cols-3 gap-3 mb-8">
+<div class="bg-twilight-surface/60 border border-white/5 rounded-2xl p-3 text-center">
+<p class="text-text-dim text-[10px] font-bold uppercase tracking-wider mb-1">Plants</p>
+<p class="text-lg font-display font-bold text-neon-teal">142</p>
+</div>
+<div class="bg-twilight-surface/60 border border-white/5 rounded-2xl p-3 text-center">
+<p class="text-text-dim text-[10px] font-bold uppercase tracking-wider mb-1">Streak</p>
+<p class="text-lg font-display font-bold text-neon-amber">12d</p>
+</div>
+<div class="bg-twilight-surface/60 border border-white/5 rounded-2xl p-3 text-center">
+<p class="text-text-dim text-[10px] font-bold uppercase tracking-wider mb-1">Points</p>
+<p class="text-lg font-display font-bold text-primary">2.4k</p>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<h3 class="text-text-dim text-[11px] font-bold uppercase tracking-[0.2em] px-2 mb-3">Garden Account</h3>
+<div class="bg-twilight-surface rounded-[24px] border border-white/5 divide-y divide-white/5">
+<div class="flex items-center justify-between p-4 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-text-bright">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+<span class="font-medium text-[15px]">Personal Information</span>
+</div>
+<span class="material-symbols-outlined text-text-dim text-[18px]">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-text-bright">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</div>
+<span class="font-medium text-[15px]">Growth Reminders</span>
+</div>
+<div class="w-10 h-5 bg-neon-green rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-text-bright">
+<span class="material-symbols-outlined text-[20px]">security</span>
+</div>
+<span class="font-medium text-[15px]">Privacy &amp; Seeds</span>
+</div>
+<span class="material-symbols-outlined text-text-dim text-[18px]">chevron_right</span>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-text-dim text-[11px] font-bold uppercase tracking-[0.2em] px-2 mb-3">Preferences</h3>
+<div class="bg-twilight-surface rounded-[24px] border border-white/5 divide-y divide-white/5">
+<div class="flex items-center justify-between p-4 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-text-bright">
+<span class="material-symbols-outlined text-[20px]">dark_mode</span>
+</div>
+<span class="font-medium text-[15px]">Twilight Mode</span>
+</div>
+<span class="text-xs text-neon-green font-bold bg-neon-green/10 px-2 py-1 rounded-md">ACTIVE</span>
+</div>
+<div class="flex items-center justify-between p-4 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-text-bright">
+<span class="material-symbols-outlined text-[20px]">language</span>
+</div>
+<span class="font-medium text-[15px]">Language</span>
+</div>
+<div class="flex items-center gap-1 text-text-dim">
+<span class="text-[13px]">English</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full bg-white/5 border border-white/5 text-primary font-bold py-4 rounded-[24px] mt-4 mb-8">
+            Sign Out
+        </button>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50">
+<div class="h-12 w-full bg-gradient-to-t from-twilight-bg to-transparent pointer-events-none absolute -top-12 left-0"></div>
+<div class="relative flex h-auto w-full bg-twilight-surface/90 backdrop-blur-2xl border-t border-white/5 pb-8 pt-3">
+<div class="flex w-full px-6">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-dim transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">home</span>
+<p class="text-[9px] font-bold uppercase tracking-tighter">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-dim transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">bar_chart</span>
+<p class="text-[9px] font-bold uppercase tracking-tighter">Growth</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-dim transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">garden_cart</span>
+<p class="text-[9px] font-bold uppercase tracking-tighter">The Garden</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-bright" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-[26px] fill-1">person</span>
+<div class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-neon-green rounded-full"></div>
+</div>
+<p class="text-[9px] font-bold uppercase tracking-tighter">Profile</p>
+</a>
+</div>
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/10 rounded-full"></div>
+</div>
+</nav>
+
+</body></html>

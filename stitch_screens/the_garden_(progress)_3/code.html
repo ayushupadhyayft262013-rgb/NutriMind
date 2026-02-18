@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Pantry - Dark Mode</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&amp;family=Quicksand:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#FF8B66",
+              "midnight": "#05070A",
+              "slate-card": "#121826",
+              "slate-accent": "#1E293B",
+              "neon-pink": "#F472B6",
+              "neon-green": "#4ADE80",
+              "neon-amber": "#FBBF24",
+              "neon-teal": "#2DD4BF",
+              "neon-purple": "#A855F7",
+              "text-bright": "#FDF6F0",
+              "text-dim": "#94A3B8",
+            },
+            fontFamily: {
+              "display": ["Fredoka", "sans-serif"],
+              "body": ["Quicksand", "sans-serif"],
+            },
+            borderRadius: {
+              "pod": "24px",
+            }
+          },
+        },
+      }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: theme('colors.midnight');
+            color: theme('colors.text-bright');
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .biolum-glow-pink { filter: drop-shadow(0 0 6px rgba(244, 114, 182, 0.6)); }
+        .biolum-glow-green { filter: drop-shadow(0 0 6px rgba(74, 222, 128, 0.6)); }
+        .biolum-glow-amber { filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6)); }
+        .biolum-glow-teal { filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.6)); }
+        .biolum-glow-purple { filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6)); }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-primary/30">
+<header class="pt-10 px-6 pb-6 bg-midnight/80 backdrop-blur-lg sticky top-0 z-40">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h1 class="text-3xl font-display font-semibold text-text-bright">The Pantry</h1>
+<p class="text-sm text-text-dim">Nourish your inner garden</p>
+</div>
+<div class="w-12 h-12 rounded-full bg-slate-card border border-white/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-3xl">inventory_2</span>
+</div>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-dim text-xl">search</span>
+<input class="w-full bg-slate-card border-none rounded-2xl py-3 pl-12 pr-4 text-sm text-text-bright focus:ring-1 focus:ring-primary placeholder:text-text-dim/50" placeholder="Search ingredients..." type="text"/>
+</div>
+</header>
+<main class="flex-1 px-6 pb-32 custom-scrollbar overflow-y-auto">
+<div class="flex gap-3 overflow-x-auto custom-scrollbar mb-8 pb-2">
+<button class="px-5 py-2 rounded-full bg-primary text-white text-xs font-bold shadow-lg shadow-primary/20 flex-shrink-0">All Foods</button>
+<button class="px-5 py-2 rounded-full bg-slate-card text-text-dim text-xs font-bold border border-white/5 flex-shrink-0">Recent</button>
+<button class="px-5 py-2 rounded-full bg-slate-card text-text-dim text-xs font-bold border border-white/5 flex-shrink-0">Favorites</button>
+<button class="px-5 py-2 rounded-full bg-slate-card text-text-dim text-xs font-bold border border-white/5 flex-shrink-0">My Recipes</button>
+</div>
+<section class="mb-10">
+<h2 class="text-lg font-display font-semibold mb-4 flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-neon-green"></span>
+            Categories
+        </h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-slate-card p-5 rounded-pod border border-white/5 flex flex-col items-center justify-center gap-3 transition-transform active:scale-95">
+<div class="w-14 h-14 rounded-full bg-neon-pink/10 flex items-center justify-center text-neon-pink biolum-glow-pink">
+<span class="material-symbols-outlined text-3xl fill-1">nutrition</span>
+</div>
+<span class="font-bold text-sm tracking-wide">Fruit</span>
+<span class="text-[10px] text-text-dim uppercase font-bold tracking-tighter">12 Items</span>
+</div>
+<div class="bg-slate-card p-5 rounded-pod border border-white/5 flex flex-col items-center justify-center gap-3 transition-transform active:scale-95">
+<div class="w-14 h-14 rounded-full bg-neon-green/10 flex items-center justify-center text-neon-green biolum-glow-green">
+<span class="material-symbols-outlined text-3xl fill-1">eco</span>
+</div>
+<span class="font-bold text-sm tracking-wide">Veggies</span>
+<span class="text-[10px] text-text-dim uppercase font-bold tracking-tighter">18 Items</span>
+</div>
+<div class="bg-slate-card p-5 rounded-pod border border-white/5 flex flex-col items-center justify-center gap-3 transition-transform active:scale-95">
+<div class="w-14 h-14 rounded-full bg-neon-amber/10 flex items-center justify-center text-neon-amber biolum-glow-amber">
+<span class="material-symbols-outlined text-3xl fill-1">egg_alt</span>
+</div>
+<span class="font-bold text-sm tracking-wide">Protein</span>
+<span class="text-[10px] text-text-dim uppercase font-bold tracking-tighter">8 Items</span>
+</div>
+<div class="bg-slate-card p-5 rounded-pod border border-white/5 flex flex-col items-center justify-center gap-3 transition-transform active:scale-95">
+<div class="w-14 h-14 rounded-full bg-neon-purple/10 flex items-center justify-center text-neon-purple biolum-glow-purple">
+<span class="material-symbols-outlined text-3xl fill-1">grass</span>
+</div>
+<span class="font-bold text-sm tracking-wide">Grains</span>
+<span class="text-[10px] text-text-dim uppercase font-bold tracking-tighter">6 Items</span>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-lg font-display font-semibold flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-neon-teal"></span>
+                Recent Nourishment
+            </h2>
+<button class="text-xs font-bold text-primary">See All</button>
+</div>
+<div class="space-y-3">
+<div class="bg-slate-card p-4 rounded-pod border border-white/5 flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-2xl bg-slate-accent flex items-center justify-center text-neon-pink biolum-glow-pink">
+<span class="material-symbols-outlined">icecream</span>
+</div>
+<div class="flex-1">
+<h3 class="text-sm font-bold">Organic Blueberries</h3>
+<p class="text-[11px] text-text-dim">1/2 Cup • 42 kcal</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-slate-accent flex items-center justify-center text-text-dim group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="bg-slate-card p-4 rounded-pod border border-white/5 flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-2xl bg-slate-accent flex items-center justify-center text-neon-green biolum-glow-green">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="flex-1">
+<h3 class="text-sm font-bold">Avocado Toast</h3>
+<p class="text-[11px] text-text-dim">1 Slice • 180 kcal</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-slate-accent flex items-center justify-center text-text-dim group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="bg-slate-card p-4 rounded-pod border border-white/5 flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-2xl bg-slate-accent flex items-center justify-center text-neon-teal biolum-glow-teal">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div class="flex-1">
+<h3 class="text-sm font-bold">Coconut Water</h3>
+<p class="text-[11px] text-text-dim">250ml • 45 kcal</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-slate-accent flex items-center justify-center text-text-dim group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50">
+<div class="h-12 w-full bg-gradient-to-t from-midnight to-transparent pointer-events-none absolute -top-12 left-0"></div>
+<div class="relative flex h-20 w-full items-center bg-slate-card/90 backdrop-blur-xl border-t border-white/5 px-6 pb-4">
+<div class="flex w-full justify-between items-center">
+<a class="flex flex-col items-center gap-1 text-text-dim hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">smart_toy</span>
+<p class="text-[10px] font-bold uppercase tracking-widest">Playground</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary biolum-glow-pink" href="#">
+<span class="material-symbols-outlined text-[26px] fill-1">kitchen</span>
+<p class="text-[10px] font-bold uppercase tracking-widest">Pantry</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-dim hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">local_florist</span>
+<p class="text-[10px] font-bold uppercase tracking-widest">Garden</p>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-dim hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[26px]">person_4</span>
+<p class="text-[10px] font-bold uppercase tracking-widest">Profile</p>
+</a>
+</div>
+</div>
+<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/10 rounded-full"></div>
+</nav>
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-2xl shadow-primary/40 z-30 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+
+</body></html>

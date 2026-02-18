@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Garden - Progress (Twilight Mode)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&amp;family=Quicksand:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#FF8B66", // Terracotta Pop
+              "twilight-bg": "#0A0F1A", // Very dark navy
+              "twilight-surface": "#141C2D", // Dark navy surface
+              "twilight-accent": "#1E293B", // Even lighter navy
+              "neon-green": "#4ADE80", // Bioluminescent green
+              "neon-amber": "#FBBF24", // Soft amber
+              "neon-teal": "#2DD4BF",
+              "text-bright": "#FDF6F0",
+              "text-dim": "#94A3B8",
+            },
+            fontFamily: {
+              "display": ["Fredoka", "sans-serif"],
+              "body": ["Quicksand", "sans-serif"],
+            },
+            borderRadius: {
+              "DEFAULT": "1rem", 
+              "lg": "2rem", 
+              "xl": "3rem", 
+              "full": "9999px",
+              "pod": "24px",
+            },
+            boxShadow: {
+              "glow-green": "0 0 15px rgba(74, 222, 128, 0.3)",
+              "glow-amber": "0 0 15px rgba(251, 191, 36, 0.3)",
+              "glow-primary": "0 0 20px rgba(255, 139, 102, 0.4)",
+            }
+          },
+        },
+      }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: theme('colors.twilight-bg');
+            color: theme('colors.text-bright');
+        }
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .wobbly-border {
+             border-radius: 32px 40px 36px 44px;
+        }
+        .garden-gradient {
+            background: linear-gradient(180deg, #0F172A 0%, #0A0F1A 100%);
+        }
+        .biolum-glow {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-primary/30">
+<header class="pt-8 px-6 pb-4">
+<div class="flex items-center justify-between mb-6">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-twilight-surface text-text-bright shadow-lg border border-white/5">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-2xl font-display font-semibold text-text-bright">The Garden</h1>
+<div class="w-10 h-10 flex items-center justify-center rounded-full bg-twilight-surface text-neon-green shadow-lg border border-white/5">
+<span class="material-symbols-outlined fill-1 biolum-glow">local_florist</span>
+</div>
+</div>
+<div class="flex justify-between items-center gap-2 bg-twilight-surface/80 backdrop-blur-md p-2 rounded-[32px] border border-white/5">
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">M</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">12</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">T</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">13</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2 relative">
+<span class="text-[10px] font-bold text-neon-amber">W</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-primary text-white text-xs font-bold shadow-glow-primary">14</div>
+<div class="absolute -bottom-1 w-1 h-1 bg-primary rounded-full"></div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">T</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">15</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">F</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">16</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">S</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">17</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 p-2">
+<span class="text-[10px] font-bold text-text-dim">S</span>
+<div class="w-8 h-8 rounded-full flex items-center justify-center bg-twilight-accent text-text-dim text-xs font-bold">18</div>
+</div>
+</div>
+</header>
+<main class="flex-1 px-4 pb-32 overflow-y-auto">
+<section class="mb-8 relative">
+<div class="flex justify-between items-end mb-4 px-2">
+<div>
+<h2 class="text-xl font-display font-semibold text-text-bright">Twilight Bloom</h2>
+<p class="text-sm text-text-dim font-medium">5 nights of bioluminescent growth</p>
+</div>
+<div class="bg-twilight-surface px-3 py-1 rounded-full text-[10px] font-bold text-text-dim border border-white/5">
+                OCT 12-18
+            </div>
+</div>
+<div class="garden-gradient w-full aspect-[4/3] wobbly-border shadow-2xl relative overflow-hidden p-6 group border border-white/5">
+<div class="absolute top-0 left-0 w-full h-full opacity-40 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent pointer-events-none"></div>
+<div class="absolute bottom-0 right-0 w-full h-1/2 opacity-30 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-neon-green/10 via-transparent to-transparent pointer-events-none"></div>
+<div class="absolute top-1/4 left-1/3 w-1 h-1 bg-neon-amber rounded-full animate-pulse blur-[1px]"></div>
+<div class="absolute top-1/2 right-1/4 w-1 h-1 bg-neon-green rounded-full animate-pulse blur-[1px]"></div>
+<div class="absolute top-1/3 left-1/2 w-0.5 h-0.5 bg-white rounded-full"></div>
+<div class="grid grid-cols-4 grid-rows-2 gap-2 h-full w-full items-end justify-items-center pb-4">
+<div class="relative flex flex-col items-center justify-end h-full">
+<div class="w-8 h-12 text-neon-green transform hover:scale-110 transition-transform cursor-pointer biolum-glow">
+<svg fill="currentColor" viewBox="0 0 24 24">
+<path d="M12,22 C12,18 12,14 12,10 C12,10 14,2 18,6 C18,6 16,10 12,10"></path>
+<path d="M12,22 C12,18 12,14 12,10 C12,10 10,4 6,8 C6,8 8,11 12,10" fill-opacity="0.4"></path>
+</svg>
+</div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Mon</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full">
+<div class="w-12 h-16 text-neon-amber transform hover:scale-110 transition-transform cursor-pointer flex items-end justify-center biolum-glow">
+<svg class="w-10 h-10 mb-1" fill="currentColor" viewBox="0 0 24 24">
+<circle class="text-white" cx="12" cy="12" fill-opacity="0.8" r="3"></circle>
+<path d="M12 2C13.5 5 16 6 19 6C16 8 16 11 16 12C16 15 14 16 12 18C10 16 8 15 8 12C8 11 8 8 5 6C8 6 10.5 5 12 2Z" fill-opacity="0.5"></path>
+</svg>
+<div class="absolute bottom-0 w-0.5 h-6 bg-neon-green/20 rounded-full"></div>
+</div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Tue</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full group/flower">
+<div class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-twilight-surface border border-white/10 px-4 py-2 rounded-2xl shadow-2xl min-w-[120px] z-10 opacity-0 group-hover/flower:opacity-100 transition-opacity pointer-events-none transform scale-95 group-hover/flower:scale-100 origin-bottom backdrop-blur-md">
+<p class="text-xs font-bold text-white text-center">WED • 112% Goal</p>
+<div class="flex gap-2 justify-center mt-2">
+<div class="w-1.5 h-1.5 rounded-full bg-neon-green shadow-glow-green"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-neon-amber shadow-glow-amber"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary shadow-glow-primary"></div>
+</div>
+<div class="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-twilight-surface border-r border-b border-white/10 rotate-45"></div>
+</div>
+<div class="w-16 h-20 text-primary transform hover:scale-110 transition-transform cursor-pointer flex items-end justify-center relative biolum-glow">
+<svg class="w-14 h-14 mb-2 drop-shadow-[0_0_8px_rgba(255,139,102,0.8)]" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12,2 C14,5 18,5 20,8 C22,11 20,15 18,17 C16,19 12,20 12,20 C12,20 8,19 6,17 C4,15 2,11 4,8 C6,5 10,5 12,2 Z"></path>
+<circle class="text-white" cx="12" cy="11" r="3"></circle>
+</svg>
+<div class="absolute bottom-0 w-1 h-8 bg-neon-green/30 rounded-full -z-10"></div>
+<div class="absolute bottom-2 -left-2 w-3 h-3 bg-neon-green/40 rounded-tr-xl rounded-bl-xl -z-10 biolum-glow"></div>
+<div class="absolute bottom-3 -right-2 w-3 h-3 bg-neon-green/40 rounded-tl-xl rounded-br-xl -z-10 biolum-glow"></div>
+</div>
+<span class="text-[10px] font-bold text-primary mt-1 uppercase tracking-widest biolum-glow">Today</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full">
+<div class="w-8 h-12 text-neon-teal transform hover:scale-110 transition-transform cursor-pointer biolum-glow">
+<svg fill="currentColor" viewBox="0 0 24 24">
+<path d="M12,22 C12,18 12,14 12,10 C12,10 14,2 18,6 C18,6 16,10 12,10"></path>
+</svg>
+</div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Thu</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full">
+<div class="w-14 h-18 text-neon-teal transform hover:scale-110 transition-transform cursor-pointer flex items-end justify-center relative biolum-glow">
+<svg class="w-10 h-10 mb-2" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12,4 C14,4 15,6 15,8 C15,10 14,12 12,12 C10,12 9,10 9,8 C9,6 10,4 12,4 Z M12,12 C15,12 17,14 17,16 C17,18 15,20 12,20 C9,20 7,18 7,16 C7,14 9,12 12,12 Z M4,12 C6,12 8,14 8,16 C8,18 6,20 4,20 C2,20 0,18 0,16 C0,14 2,12 4,12 Z M20,12 C22,12 24,14 24,16 C24,18 22,20 20,20 C18,20 16,18 16,16 C16,14 18,12 20,12 Z"></path>
+</svg>
+<div class="absolute bottom-0 w-0.5 h-7 bg-neon-green/20 rounded-full -z-10"></div>
+</div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Fri</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full opacity-20">
+<div class="w-8 h-8 rounded-full border border-dashed border-text-dim flex items-center justify-center"></div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Sat</span>
+</div>
+<div class="relative flex flex-col items-center justify-end h-full opacity-20">
+<div class="w-8 h-8 rounded-full border border-dashed border-text-dim flex items-center justify-center"></div>
+<span class="text-[10px] font-bold text-text-dim mt-1 uppercase tracking-wider">Sun</span>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-xl font-display font-semibold text-text-bright mb-4 px-2">Nurture Seeds</h2>
+<div class="space-y-4">
+<div class="bg-twilight-surface rounded-pod p-4 flex items-center justify-between shadow-lg border border-white/5 cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-neon-green shadow-glow-green"></div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-neon-green/10 flex items-center justify-center text-neon-green biolum-glow">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div>
+<h3 class="font-bold text-text-bright">Hydration</h3>
+<p class="text-xs text-text-dim font-medium">Water goal met!</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-neon-green flex items-center justify-center text-twilight-bg shadow-glow-green">
+<span class="material-symbols-outlined text-sm font-bold">check</span>
+</div>
+</div>
+<div class="bg-twilight-surface rounded-pod p-4 flex items-center justify-between border border-white/5 cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-twilight-accent flex items-center justify-center text-text-dim group-hover:text-neon-amber transition-colors">
+<span class="material-symbols-outlined">pill</span>
+</div>
+<div>
+<h3 class="font-bold text-text-bright">Vitamins</h3>
+<p class="text-xs text-text-dim font-medium">Ready to nourish</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-amber-900/40 flex items-center justify-center text-neon-amber border border-neon-amber/30 group-hover:bg-neon-amber/20 transition-all">
+<span class="material-symbols-outlined text-xs transform rotate-45">eco</span>
+</div>
+</div>
+<div class="bg-twilight-surface rounded-pod p-4 flex items-center justify-between border border-white/5 cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-twilight-accent flex items-center justify-center text-text-dim group-hover:text-neon-teal transition-colors">
+<span class="material-symbols-outlined">nights_stay</span>
+</div>
+<div>
+<h3 class="font-bold text-text-bright">8h Sleep</h3>
+<p class="text-xs text-text-dim font-medium">Log your rest</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-slate-700/40 flex items-center justify-center text-neon-teal border border-neon-teal/30 group-hover:bg-neon-teal/20 transition-all">
+<span class="material-symbols-outlined text-xs transform rotate-45">eco</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50">
+<div class="h-16 w-full bg-gradient-to-t from-twilight-bg to-transparent pointer-events-none absolute -top-16 left-0"></div>
+<div class="relative flex h-auto w-full flex-col bg-twilight-surface/90 backdrop-blur-xl border-t border-white/5 pb-6 pt-2">
+<div class="flex gap-2 px-6">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-dim hover:text-white transition-colors group" href="#">
+<div class="flex h-8 items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[28px]">home</span>
+</div>
+<p class="text-[10px] font-bold uppercase tracking-wider">Playground</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end -mt-10" href="#">
+<div class="h-16 w-16 bg-primary rounded-full flex items-center justify-center text-white shadow-glow-primary hover:scale-105 transition-all">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</div>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-neon-green biolum-glow" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined text-[28px] fill-1">local_florist</span>
+</div>
+<p class="text-[10px] font-bold uppercase tracking-widest">Garden</p>
+</a>
+</div>
+<div class="h-1.5 w-1/3 bg-white/10 rounded-full mx-auto mt-6"></div>
+</div>
+</nav>
+
+</body></html>

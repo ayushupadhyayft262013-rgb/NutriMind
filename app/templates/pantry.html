@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+{% block title %}The Pantry - NutriMind{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+    <!-- Search / Header -->
+    <div class="p-6 pb-2 shrink-0">
+        <h1 class="text-2xl font-display font-bold text-text-main dark:text-text-bright mb-4">The Pantry</h1>
+
+        <div class="relative">
+            <span class="absolute left-4 top-3.5 material-symbols-outlined text-text-muted">search</span>
+            <input type="text" id="searchInput" placeholder="Search for food..."
+                class="w-full bg-surface dark:bg-twilight-surface rounded-full py-3.5 pl-12 pr-4 shadow-soft border-none focus:ring-2 focus:ring-primary text-text-main dark:text-text-bright placeholder-text-muted/50 transition-all font-medium">
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="px-6 py-2 shrink-0 flex gap-4 overflow-x-auto hide-scrollbar">
+        <button
+            class="px-4 py-2 rounded-full bg-primary text-white font-bold text-sm shadow-glow-primary transition-transform active:scale-95">Search</button>
+        <button
+            class="px-4 py-2 rounded-full bg-surface dark:bg-twilight-surface text-text-muted font-medium text-sm border border-white/5 disabled:opacity-50">Favorites</button>
+        <button
+            class="px-4 py-2 rounded-full bg-surface dark:bg-twilight-surface text-text-muted font-medium text-sm border border-white/5 disabled:opacity-50">Recent</button>
+        <button
+            class="px-4 py-2 rounded-full bg-surface dark:bg-twilight-surface text-text-muted font-medium text-sm border border-white/5 disabled:opacity-50">Custom</button>
+    </div>
+
+    <!-- Results Area -->
+    <div class="flex-1 overflow-y-auto p-6 pt-2 hide-scrollbar space-y-3" id="resultsArea">
+
+        <!-- Search Info / Empty State -->
+        <div id="emptyState" class="text-center mt-10 opacity-60">
+            <div
+                class="w-16 h-16 bg-surface dark:bg-twilight-surface rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                🥝</div>
+            <p class="text-text-muted text-sm">Type above to search the USDA database <br>or ask for an AI estimate.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden flex flex-col items-center mt-10">
+            <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-text-muted text-xs mt-3 font-bold uppercase tracking-widest">Foraging...</p>
+        </div>
+
+        <!-- Results will be injected here -->
+    </div>
+
+</div>
+
+<!-- Context for adding meals -->
+<input type="hidden" id="currentDate" value="{{ date_iso }}">
+<input type="hidden" id="currentUserId" value="{{ current_user_id }}">
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const resultsArea = document.getElementById('resultsArea');
+    const emptyState = document.getElementById('emptyState');
+    const loadingState = document.getElementById('loadingState');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            emptyState.classList.remove('hidden');
+            resultsArea.innerHTML = '';
+            resultsArea.appendChild(emptyState);
+            resultsArea.appendChild(loadingState); // keep hidden loading state in DOM
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            performSearch(query);
+        }, 600);
+    });
+
+    async function performSearch(query) {
+        emptyState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+
+        // Clear previous results except loading/empty states
+        Array.from(resultsArea.children).forEach(child => {
+            if (child.id !== 'emptyState' && child.id !== 'loadingState') {
+                child.remove();
+            }
+        });
+
+        try {
+            const res = await fetch(`/api/search_food?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+
+            loadingState.classList.add('hidden');
+
+            if (data.items && data.items.length > 0) {
+                renderResults(data.items);
+            } else {
+                renderNoResults();
+            }
+        } catch (err) {
+            console.error(err);
+            loadingState.classList.add('hidden');
+            // Show error
+        }
+    }
+
+    function renderResults(items) {
+        items.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'bg-surface dark:bg-twilight-surface rounded-2xl p-4 flex justify-between items-center shadow-soft border border-white/50 dark:border-white/5 animate-fade-in group';
+
+            el.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-surface-alt dark:bg-white/5 flex items-center justify-center text-xl">
+                        ${item.emoji || '🍽️'}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-text-main dark:text-text-bright text-sm">${item.name}</h3>
+                        <p class="text-xs text-text-muted">${item.kcal} kcal • ${item.protein}p / ${item.carbs}c / ${item.fats}f</p>
+                    </div>
+                </div>
+                <button onclick='addFood(${JSON.stringify(item)})' class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-sm font-bold">add</span>
+                </button>
+            `;
+            resultsArea.appendChild(el);
+        });
+    }
+
+    function renderNoResults() {
+        const el = document.createElement('div');
+        el.className = 'text-center mt-10 text-text-muted';
+        el.textContent = 'No results found.';
+        resultsArea.appendChild(el);
+    }
+
+    async function addFood(item) {
+        const card = event.currentTarget.closest('.group');
+        card.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const payload = {
+                name: item.name,
+                kcal: item.kcal,
+                protein: item.protein,
+                carbs: item.carbs,
+                fats: item.fats,
+                date: document.getElementById('currentDate').value,
+                user_id: document.getElementById('currentUserId').value
+            };
+
+            const res = await fetch('/api/meals/add_from_search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                // Show success feedback
+                card.classList.remove('opacity-50');
+                const btn = card.querySelector('button');
+                btn.classList.remove('bg-primary/10', 'text-primary', 'hover:bg-primary', 'hover:text-white');
+                btn.classList.add('bg-green-500', 'text-white');
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm font-bold">check</span>';
+
+                // Optional: redirect to home after short delay
+                // setTimeout(() => window.location.href = '/dashboard', 1000);
+            }
+        } catch (err) {
+            console.error(err);
+            card.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    }
+</script>
+{% endblock %}
