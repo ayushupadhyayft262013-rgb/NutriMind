@@ -148,7 +148,9 @@ def parse_portions(extract_dir: str, foods: dict[str, dict]) -> None:
         reader = csv.DictReader(f)
         for row in reader:
             fdc_id = row.get("fdc_id", "")
+            # SR Legacy uses 'modifier' for the description, not 'portion_description'
             desc = row.get("portion_description", "").strip()
+            modifier = row.get("modifier", "").strip()
             amount = row.get("amount", "1").strip()
             gram_weight = row.get("gram_weight", "")
 
@@ -163,22 +165,21 @@ def parse_portions(extract_dir: str, foods: dict[str, dict]) -> None:
             if grams <= 0:
                 continue
 
-            # Build portion label: combine amount + description
+            # In SR Legacy, modifier has the text (e.g. "cup", "large", "tbsp")
+            # while portion_description is usually empty
+            label_text = desc or modifier
+            if not label_text:
+                continue
+
+            # Build portion label: "1 cup", "2 tbsp", etc.
             try:
                 amt = float(amount)
-                if amt != 1.0 and desc:
-                    label = f"{amount} {desc}"
-                elif desc:
-                    label = desc
+                if amt != 1.0:
+                    label = f"{amount} {label_text}"
                 else:
-                    continue  # skip entries with no description
+                    label = f"1 {label_text}"
             except ValueError:
-                if not desc:
-                    continue
-                label = desc
-
-            if not label:
-                continue
+                label = label_text
 
             if "portions" not in foods[fdc_id]:
                 foods[fdc_id]["portions"] = []
