@@ -13,8 +13,19 @@
             </div>
         </div>
         <h1 class="text-xl font-display font-bold text-text-main dark:text-text-bright">{{ user.name }}</h1>
-        <p class="text-sm text-text-muted font-medium">Main Quest: <span class="text-primary">{{ user.goal|capitalize
+        <p class="text-sm text-text-muted font-medium mb-4">Main Quest: <span class="text-primary">{{
+                user.goal|capitalize
                 }}</span></p>
+
+        <!-- User Switcher -->
+        <div class="flex flex-wrap justify-center gap-2">
+            {% for u in users %}
+            <a href="/profile?user_id={{ u.telegram_user_id }}"
+                class="px-3 py-1 rounded-full text-xs font-bold border transition-all {{ 'bg-primary text-white border-primary' if u.telegram_user_id == current_user_id else 'bg-surface-alt dark:bg-white/5 text-text-muted border-transparent hover:border-primary/50' }}">
+                {{ u.name }}
+            </a>
+            {% endfor %}
+        </div>
     </div>
 
     <!-- Stats Grid (Editable) -->

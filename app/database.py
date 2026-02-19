@@ -97,8 +97,6 @@ async def upsert_user_profile(telegram_user_id: int, **kwargs) -> None:
             await db.execute(
                 f"INSERT INTO user_profile ({cols}) VALUES ({placeholders})",
                 list(kwargs.values()),
-                f"INSERT INTO user_profile ({cols}) VALUES ({placeholders})",
-                list(kwargs.values()),
             )
         await db.commit()
     finally:
