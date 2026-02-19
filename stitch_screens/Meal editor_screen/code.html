@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Meal Details</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&amp;family=Quicksand:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --color-primary: #FF8B66;--color-bg: #FDF6F0;--color-surface: #FFFBF7;--color-surface-alt: #EADBC8;--color-text: #4A3B32;--color-muted: #9C8C74;--color-protein: #FFB347;--color-carbs: #AECBFA;--color-fats: #C5E1A5;--color-fiber: #D4B2D8;}
+        @layer base {
+            body {
+                @apply bg-[var(--color-bg)] text-[var(--color-text)] font-['Quicksand'] antialiased;
+            }
+            h1, h2, h3, button {
+                @apply font-['Fredoka'];
+            }
+        }
+        .squircle {
+            border-radius: 48px;
+        }
+        .pod-card {
+            border-radius: 32px;
+        }
+        .recessed-input {
+            box-shadow: inset 0 4px 8px rgba(74, 59, 50, 0.08);
+        }
+        .chunky-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 4px solid currentColor;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .chunky-slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 4px solid currentColor;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .grain-texture {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex items-center justify-center min-h-screen">
+<div class="relative w-full max-w-[402px] h-[874px] bg-[var(--color-bg)] overflow-hidden shadow-2xl flex flex-col grain-texture">
+<header class="px-8 pt-12 pb-6 flex items-center justify-between">
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<h1 class="text-2xl font-bold">Edit Breakfast</h1>
+<div class="w-12"></div> 
+</header>
+<main class="flex-1 px-6 space-y-6 overflow-y-auto no-scrollbar">
+<section class="squircle bg-[var(--color-surface)] p-8 shadow-sm">
+<label class="block text-center text-[var(--color-muted)] font-semibold mb-2">Total Energy</label>
+<div class="relative">
+<input class="recessed-input w-full bg-[var(--color-bg)] border-none rounded-3xl py-6 text-center text-4xl font-bold text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] transition-all" type="number" value="450"/>
+<span class="absolute right-8 top-1/2 -translate-y-1/2 font-bold text-[var(--color-muted)]">kcal</span>
+</div>
+</section>
+<div class="grid grid-cols-2 gap-4">
+<div class="pod-card bg-[var(--color-surface)] p-5 shadow-sm flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-[var(--color-protein)]/20 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[var(--color-protein)]">egg</span>
+</div>
+<span class="font-bold text-lg">24g</span>
+<span class="text-xs font-semibold text-[var(--color-muted)] mb-4">Protein</span>
+<input class="chunky-slider w-full h-3 bg-[var(--color-bg)] rounded-full appearance-none cursor-pointer text-[var(--color-protein)]" type="range"/>
+</div>
+<div class="pod-card bg-[var(--color-surface)] p-5 shadow-sm flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-[var(--color-carbs)]/20 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[var(--color-carbs)]">bakery_dining</span>
+</div>
+<span class="font-bold text-lg">52g</span>
+<span class="text-xs font-semibold text-[var(--color-muted)] mb-4">Carbs</span>
+<input class="chunky-slider w-full h-3 bg-[var(--color-bg)] rounded-full appearance-none cursor-pointer text-[var(--color-carbs)]" type="range"/>
+</div>
+<div class="pod-card bg-[var(--color-surface)] p-5 shadow-sm flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-[var(--color-fats)]/20 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[var(--color-fats)]">water_drop</span>
+</div>
+<span class="font-bold text-lg">12g</span>
+<span class="text-xs font-semibold text-[var(--color-muted)] mb-4">Fats</span>
+<input class="chunky-slider w-full h-3 bg-[var(--color-bg)] rounded-full appearance-none cursor-pointer text-[var(--color-fats)]" type="range"/>
+</div>
+<div class="pod-card bg-[var(--color-surface)] p-5 shadow-sm flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-[var(--color-fiber)]/20 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-[var(--color-fiber)]">eco</span>
+</div>
+<span class="font-bold text-lg">8g</span>
+<span class="text-xs font-semibold text-[var(--color-muted)] mb-4">Fiber</span>
+<input class="chunky-slider w-full h-3 bg-[var(--color-bg)] rounded-full appearance-none cursor-pointer text-[var(--color-fiber)]" type="range"/>
+</div>
+</div>
+<div class="pod-card bg-[var(--color-surface-alt)]/30 p-6 space-y-4">
+<h3 class="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">Nourishing Elements</h3>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-2xl">🥣</span>
+<div>
+<p class="font-bold text-sm">Rolled Oats</p>
+<p class="text-xs text-[var(--color-muted)]">120g</p>
+</div>
+</div>
+<span class="font-bold text-sm">320 kcal</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-2xl">🫐</span>
+<div>
+<p class="font-bold text-sm">Blueberries</p>
+<p class="text-xs text-[var(--color-muted)]">50g</p>
+</div>
+</div>
+<span class="font-bold text-sm">85 kcal</span>
+</div>
+<button class="w-full py-3 border-2 border-dashed border-[var(--color-muted)]/30 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-[var(--color-muted)]">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Add more food
+                </button>
+</div>
+</main>
+<footer class="p-6 bg-gradient-to-t from-[var(--color-bg)] to-transparent">
+<button class="w-full bg-[var(--color-primary)] hover:scale-[1.02] active:scale-95 transition-all duration-200 text-white py-5 rounded-[28px] text-xl font-bold shadow-lg shadow-[var(--color-primary)]/30">
+                Save Nourishment
+            </button>
+</footer>
+<div class="h-1.5 w-32 bg-[var(--color-text)]/10 rounded-full mx-auto mb-2"></div>
+</div>
+
+</body></html>

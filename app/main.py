@@ -333,6 +333,53 @@ async def update_profile_stats(
     except Exception as e:
         logger.error(f"Profile update error: {e}")
         return HTMLResponse("Error updating profile", status_code=500)
+
+
+@app.put("/api/meals/{block_id}")
+async def update_meal(block_id: str, request: Request):
+    """Update an existing meal row."""
+    from app.notion_service import notion_service
+    
+    try:
+        data = await request.json()
+        page_id = data.get("page_id")
+        
+        if not page_id:
+            return JSONResponse({"ok": False, "error": "page_id is required"}, status_code=400)
+            
+        meal_update = {
+            "name": data.get("name"),
+            "kcal": data.get("kcal"),
+            "protein": data.get("protein_g"),
+            "carbs": data.get("carbs_g"),
+            "fats": data.get("fats_g"),
+        }
+        
+        await notion_service.update_meal_row(block_id, meal_update)
+        await notion_service.recalculate_daily_totals(page_id)
+        
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"Update meal error: {e}", exc_info=True)
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.delete("/api/meals/{block_id}")
+async def delete_meal(block_id: str, page_id: str):
+    """Delete a meal row."""
+    from app.notion_service import notion_service
+    
+    try:
+        if not page_id:
+             return JSONResponse({"ok": False, "error": "page_id is required"}, status_code=400)
+
+        await notion_service.delete_meal_row(block_id)
+        await notion_service.recalculate_daily_totals(page_id)
+        
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"Delete meal error: {e}", exc_info=True)
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
     
 @app.get("/status")
 async def legacy_status_redirect(request: Request):

@@ -146,5 +146,209 @@
 
 </div>
 
-<!-- logic script placeholder -->
+<!-- Meal Editor Modal -->
+<div id="mealEditorModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeEditModal()"></div>
+
+    <!-- Modal Content -->
+    <div class="absolute inset-x-0 bottom-0 sm:top-1/2 sm:left-1/2 sm:bottom-auto sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-[400px] h-[85vh] sm:h-auto bg-surface dark:bg-twilight-surface rounded-t-[40px] sm:rounded-[40px] shadow-2xl flex flex-col overflow-hidden transition-transform transform translate-y-full sm:translate-y-0 duration-300 ease-out"
+        id="modalPanel">
+
+        <!-- Header -->
+        <header class="px-8 pt-8 pb-4 flex items-center justify-between bg-surface dark:bg-twilight-surface z-10">
+            <button onclick="closeEditModal()"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-alt/50 dark:bg-white/5 text-text-main dark:text-text-bright hover:bg-surface-alt dark:hover:bg-white/10 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h2 class="text-xl font-['Fredoka'] font-bold text-text-main dark:text-text-bright">Edit Nourishment</h2>
+            <button onclick="deleteMeal()"
+                class="w-10 h-10 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </header>
+
+        <!-- Scrollable Content -->
+        <main class="flex-1 px-6 space-y-6 overflow-y-auto no-scrollbar pb-24 font-['Quicksand']">
+
+            <!-- Hidden Fields -->
+            <input type="hidden" id="editBlockId">
+            <input type="hidden" id="editPageId" value="{{ page_id }}">
+
+            <!-- Name Input -->
+            <div class="bg-surface-alt/20 dark:bg-white/5 rounded-3xl p-4">
+                <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2 ml-1">Meal
+                    Name</label>
+                <input type="text" id="editName"
+                    class="w-full bg-transparent border-none text-lg font-bold text-text-main dark:text-text-bright focus:ring-0 p-0 placeholder-text-muted/50"
+                    placeholder="e.g. Oatmeal Bowl">
+            </div>
+
+            <!-- Total Calories Display -->
+            <div
+                class="bg-surface dark:bg-twilight-surface rounded-[40px] p-6 shadow-soft border border-white/50 dark:border-white/5 text-center relative overflow-hidden group">
+                <div
+                    class="absolute inset-0 bg-primary/5 dark:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                </div>
+                <label class="block text-text-muted font-['Fredoka'] font-semibold mb-2">Total Energy</label>
+                <div class="relative inline-block">
+                    <input type="number" id="editKcal"
+                        class="w-32 bg-transparent border-none text-4xl font-['Fredoka'] font-bold text-text-main dark:text-text-bright text-center focus:ring-0 p-0"
+                        value="0">
+                    <span
+                        class="absolute -right-8 top-1/2 -translate-y-1/2 font-bold text-text-muted text-sm">kcal</span>
+                </div>
+            </div>
+
+            <!-- Macros Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Protein -->
+                <div
+                    class="bg-surface dark:bg-twilight-surface rounded-3xl p-4 shadow-soft border border-white/40 dark:border-white/5 flex flex-col items-center">
+                    <div class="w-8 h-8 rounded-full bg-accent-protein/20 flex items-center justify-center mb-2">
+                        <span class="material-symbols-outlined text-accent-protein text-sm">egg</span>
+                    </div>
+                    <span class="font-['Fredoka'] font-bold text-lg text-text-main dark:text-text-bright"
+                        id="dispProtein">0g</span>
+                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-3">Protein</span>
+                    <input type="range" id="editProtein"
+                        class="w-full h-2 bg-surface-alt dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-accent-protein"
+                        min="0" max="100">
+                </div>
+                <!-- Carbs -->
+                <div
+                    class="bg-surface dark:bg-twilight-surface rounded-3xl p-4 shadow-soft border border-white/40 dark:border-white/5 flex flex-col items-center">
+                    <div class="w-8 h-8 rounded-full bg-accent-carbs/20 flex items-center justify-center mb-2">
+                        <span class="material-symbols-outlined text-accent-carbs text-sm">bakery_dining</span>
+                    </div>
+                    <span class="font-['Fredoka'] font-bold text-lg text-text-main dark:text-text-bright"
+                        id="dispCarbs">0g</span>
+                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-3">Carbs</span>
+                    <input type="range" id="editCarbs"
+                        class="w-full h-2 bg-surface-alt dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-accent-carbs"
+                        min="0" max="200">
+                </div>
+                <!-- Fats -->
+                <div
+                    class="bg-surface dark:bg-twilight-surface rounded-3xl p-4 shadow-soft border border-white/40 dark:border-white/5 flex flex-col items-center">
+                    <div class="w-8 h-8 rounded-full bg-accent-fats/20 flex items-center justify-center mb-2">
+                        <span class="material-symbols-outlined text-accent-fats text-sm">water_drop</span>
+                    </div>
+                    <span class="font-['Fredoka'] font-bold text-lg text-text-main dark:text-text-bright"
+                        id="dispFats">0g</span>
+                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-3">Fats</span>
+                    <input type="range" id="editFats"
+                        class="w-full h-2 bg-surface-alt dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-accent-fats"
+                        min="0" max="100">
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer Actions -->
+        <footer
+            class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-surface dark:from-twilight-surface via-surface dark:via-twilight-surface to-transparent">
+            <button onclick="saveMeal()"
+                class="w-full py-4 rounded-full bg-primary text-white font-['Fredoka'] font-bold text-lg shadow-glow-primary hover:scale-[1.02] active:scale-95 transition-all">
+                Save Changes
+            </button>
+        </footer>
+    </div>
+</div>
+
+<script>
+    // Slider Sync Logic
+    ['Protein', 'Carbs', 'Fats'].forEach(macro => {
+        const slider = document.getElementById(`edit${macro}`);
+        const display = document.getElementById(`disp${macro}`);
+        slider.addEventListener('input', (e) => {
+            display.textContent = `${e.target.value}g`;
+        });
+    });
+
+    // Store meals in a JS object
+    const mealsData = {
+        {% for meal in meals %}
+    "{{ meal.block_id }}": {
+        name: "{{ meal.name }}",
+            kcal: {{ meal.kcal }},
+        protein: {{ meal.protein }},
+        carbs: {{ meal.carbs }},
+        fats: {{ meal.fats }}
+    },
+    {% endfor %}
+    };
+
+    function editMeal(blockId) {
+        const meal = mealsData[blockId];
+        if (!meal) return;
+
+        document.getElementById('editBlockId').value = blockId;
+        document.getElementById('editName').value = meal.name;
+        document.getElementById('editKcal').value = meal.kcal;
+
+        document.getElementById('editProtein').value = meal.protein;
+        document.getElementById('dispProtein').textContent = meal.protein + 'g';
+
+        document.getElementById('editCarbs').value = meal.carbs;
+        document.getElementById('dispCarbs').textContent = meal.carbs + 'g';
+
+        document.getElementById('editFats').value = meal.fats;
+        document.getElementById('dispFats').textContent = meal.fats + 'g';
+
+        // Show Modal
+        const modal = document.getElementById('mealEditorModal');
+        const panel = document.getElementById('modalPanel');
+        modal.classList.remove('hidden');
+        panel.classList.remove('translate-y-full');
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('mealEditorModal');
+        const panel = document.getElementById('modalPanel');
+        panel.classList.add('translate-y-full');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    async function saveMeal() {
+        const blockId = document.getElementById('editBlockId').value;
+        const pageId = document.getElementById('editPageId').value;
+
+        const payload = {
+            name: document.getElementById('editName').value,
+            kcal: parseInt(document.getElementById('editKcal').value),
+            protein_g: parseInt(document.getElementById('editProtein').value),
+            carbs_g: parseInt(document.getElementById('editCarbs').value),
+            fats_g: parseInt(document.getElementById('editFats').value),
+            page_id: pageId
+        };
+
+        try {
+            const res = await fetch(`/api/meals/${blockId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) window.location.reload();
+        } catch (err) {
+            alert('Error updating meal');
+        }
+    }
+
+    async function deleteMeal() {
+        if (!confirm("Delete this meal?")) return;
+
+        const blockId = document.getElementById('editBlockId').value;
+        const pageId = document.getElementById('editPageId').value;
+
+        try {
+            const res = await fetch(`/api/meals/${blockId}?page_id=${pageId}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) window.location.reload();
+        } catch (err) {
+            alert('Error deleting meal');
+        }
+    }
+</script>
 {% endblock %}
