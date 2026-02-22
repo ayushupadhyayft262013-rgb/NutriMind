@@ -276,10 +276,10 @@
         {% for meal in meals %}
     "{{ meal.id }}": {
         name: "{{ meal.name }}",
-            kcal: { { meal.kcal } },
-        protein: { { meal.protein_g } },
-        carbs: { { meal.carbs_g } },
-        fats: { { meal.fats_g } }
+            kcal: parseInt("{{ meal.kcal }}", 10),
+                protein: parseFloat("{{ meal.protein_g }}"),
+                    carbs: parseFloat("{{ meal.carbs_g }}"),
+                        fats: parseFloat("{{ meal.fats_g }}")
     },
     {% endfor %}
     };
