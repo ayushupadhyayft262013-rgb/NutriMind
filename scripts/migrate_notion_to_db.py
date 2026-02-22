@@ -8,7 +8,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath('.'))
 
 from app.notion_service import notion_service
-from app.database import db
+from app.database import get_user_profile, upsert_user_profile, get_meals_by_date, add_meal, init_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,10 +60,10 @@ async def migrate_data():
                     
                     # Ensure User exists in local DB
                     if telegram_user_id not in unique_users:
-                        existing_user = await db.get_user_profile(telegram_user_id)
+                        existing_user = await get_user_profile(telegram_user_id)
                         if not existing_user:
-                            await db.upsert_user_profile(
-                                telegram_id=telegram_user_id,
+                            await upsert_user_profile(
+                                telegram_user_id=telegram_user_id,
                                 name=user_name,
                                 target_kcal=target_kcal,
                                 onboarded=1
@@ -78,12 +78,12 @@ async def migrate_data():
                     # Insert meals to DB
                     for m in meals:
                         # Ensure we don't duplicate meals if script is run twice
-                        existing_meals = await db.get_meals_by_date(telegram_user_id, date_str)
+                        existing_meals = await get_meals_by_date(telegram_user_id, date_str)
                         # Check by name and kcal to avoid duplicates roughly
                         is_duplicate = any(em["name"] == m["name"] and em["kcal"] == m["kcal"] for em in existing_meals)
                         
                         if not is_duplicate:
-                            await db.add_meal(
+                            await add_meal(
                                 telegram_user_id=telegram_user_id,
                                 date=date_str,
                                 name=m["name"],
@@ -162,4 +162,7 @@ async def fetch_meals_from_page(page_id: str) -> list[dict]:
         return []
 
 if __name__ == "__main__":
-    asyncio.run(migrate_data())
+    async def run_all():
+        await init_db()
+        await migrate_data()
+    asyncio.run(run_all())
