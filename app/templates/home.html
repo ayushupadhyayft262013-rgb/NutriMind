@@ -64,7 +64,7 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-protein w-[{{ protein_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_protein }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_protein|round(1) }}g</span>
         </div>
         <!-- Carbs -->
         <div
@@ -73,7 +73,7 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-carbs w-[{{ carbs_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_carbs }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_carbs|round(1) }}g</span>
         </div>
         <!-- Fats -->
         <div
@@ -82,7 +82,7 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-fats w-[{{ fats_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_fats }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_fats|round(1) }}g</span>
         </div>
     </div>
 
