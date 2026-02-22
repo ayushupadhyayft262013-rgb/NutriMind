@@ -705,9 +705,9 @@
                     <div class="meal-left">
                         <div class="meal-title">{{ meal.name }}</div>
                         <div class="meal-macros">
-                            <span class="meal-badge">P: {{ meal.protein }}</span>
-                            <span class="meal-badge">C: {{ meal.carbs }}</span>
-                            <span class="meal-badge">F: {{ meal.fats }}</span>
+                            <span class="meal-badge">P: {{ meal.protein_g }}</span>
+                            <span class="meal-badge">C: {{ meal.carbs_g }}</span>
+                            <span class="meal-badge">F: {{ meal.fats_g }}</span>
                         </div>
                     </div>
                     <div class="meal-right">
@@ -721,9 +721,9 @@
                 <!-- Hidden Data inputs for JS convenience -->
                 <input type="hidden" id="data-name-{{ meal.block_id }}" value="{{ meal.name }}">
                 <input type="hidden" id="data-kcal-{{ meal.block_id }}" value="{{ meal.kcal }}">
-                <input type="hidden" id="data-prot-{{ meal.block_id }}" value="{{ meal.protein }}">
-                <input type="hidden" id="data-carb-{{ meal.block_id }}" value="{{ meal.carbs }}">
-                <input type="hidden" id="data-fat-{{ meal.block_id }}" value="{{ meal.fats }}">
+                <input type="hidden" id="data-prot-{{ meal.block_id }}" value="{{ meal.protein_g }}">
+                <input type="hidden" id="data-carb-{{ meal.block_id }}" value="{{ meal.carbs_g }}">
+                <input type="hidden" id="data-fat-{{ meal.block_id }}" value="{{ meal.fats_g }}">
                 {% endfor %}
                 {% else %}
                 <div style="text-align:center; padding: 40px; color: var(--text-tertiary);">

@@ -128,11 +128,14 @@
             <!-- Macro mini-bar -->
             <div class="flex gap-1 h-1 w-full rounded-full overflow-hidden mt-2 bg-surface-alt dark:bg-white/5">
                 <div class="bg-accent-protein h-full"
-                    style="width: {{ (meal.protein / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+                    style="width: {{ (meal.protein_g / (meal.protein_g + meal.carbs_g + meal.fats_g + 0.1) * 100) }}%">
+                </div>
                 <div class="bg-accent-carbs h-full"
-                    style="width: {{ (meal.carbs / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+                    style="width: {{ (meal.carbs_g / (meal.protein_g + meal.carbs_g + meal.fats_g + 0.1) * 100) }}%">
+                </div>
                 <div class="bg-accent-fats h-full"
-                    style="width: {{ (meal.fats / (meal.protein + meal.carbs + meal.fats + 0.1) * 100) }}%"></div>
+                    style="width: {{ (meal.fats_g / (meal.protein_g + meal.carbs_g + meal.fats_g + 0.1) * 100) }}%">
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -271,10 +274,10 @@
         {% for meal in meals %}
     "{{ meal.block_id }}": {
         name: "{{ meal.name }}",
-            kcal: {{ meal.kcal }},
-        protein: {{ meal.protein }},
-        carbs: {{ meal.carbs }},
-        fats: {{ meal.fats }}
+            kcal: { { meal.kcal } },
+        protein: { { meal.protein_g } },
+        carbs: { { meal.carbs_g } },
+        fats: { { meal.fats_g } }
     },
     {% endfor %}
     };
