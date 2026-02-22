@@ -10,7 +10,6 @@ from app.notion_service import notion_service
 from app.onboarding import is_onboarding, start_onboarding, handle_onboarding_message
 from app.preferences import learn_from_correction
 from app.config import settings
-from app.notion_service import notion_service
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +58,18 @@ async def handle_update(update: dict) -> None:
             block_id = meal["block_id"]
 
             if len(parts) == 1 or parts[1].lower() in ("del", "delete", "d", "remove"):
-                # Delete the meal
-                await notion_service.delete_meal_row(block_id)
-                totals = await notion_service.recalculate_daily_totals(page_id)
+                # Delete the meal radially
+                await db.delete_meal(meal["id"])
+                
+                # Fetch fresh totals
+                db_meals = await db.get_meals_by_date(user_id, date.today().isoformat())
+                total_kcal = sum(m.get("kcal", 0) for m in db_meals)
+                profile = await db.get_user_profile(user_id)
+                target_kcal = profile.get("target_kcal", 1800)
+                
                 await tg.send_message(
                     chat_id,
-                    f"Deleted: {meal['name']}\n\nNew total: {totals['total_kcal']} / {totals['target_kcal']} kcal",
+                    f"Deleted: {meal['name']}\n\nNew total: {total_kcal} / {target_kcal} kcal",
                     parse_mode="",
                 )
             elif len(parts) >= 5:
@@ -72,21 +77,26 @@ async def handle_update(update: dict) -> None:
                 new_data = {
                     "name": meal["name"],  # keep original name
                     "kcal": float(parts[1]),
-                    "protein": float(parts[2]),
-                    "carbs": float(parts[3]),
-                    "fats": float(parts[4]),
+                    "protein_g": float(parts[2]),
+                    "carbs_g": float(parts[3]),
+                    "fats_g": float(parts[4]),
                     "source": "Edited",
                 }
                 # If a new name is provided (6+ parts), use it
                 if len(parts) >= 6:
                     new_data["name"] = " ".join(parts[5:])
-                await notion_service.update_meal_row(block_id, new_data)
-                totals = await notion_service.recalculate_daily_totals(page_id)
+                await db.update_meal(meal["id"], **new_data)
+                
+                db_meals = await db.get_meals_by_date(user_id, date.today().isoformat())
+                total_kcal = sum(m.get("kcal", 0) for m in db_meals)
+                profile = await db.get_user_profile(user_id)
+                target_kcal = profile.get("target_kcal", 1800)
+                
                 await tg.send_message(
                     chat_id,
                     f"Updated: {new_data['name']}\n"
-                    f"{new_data['kcal']} kcal | P:{new_data['protein']}g | C:{new_data['carbs']}g | F:{new_data['fats']}g\n\n"
-                    f"New total: {totals['total_kcal']} / {totals['target_kcal']} kcal",
+                    f"{new_data['kcal']} kcal | P:{new_data['protein_g']}g | C:{new_data['carbs_g']}g | F:{new_data['fats_g']}g\n\n"
+                    f"New total: {total_kcal} / {target_kcal} kcal",
                     parse_mode="",
                 )
             else:
@@ -158,13 +168,12 @@ async def handle_update(update: dict) -> None:
             target = intent["target"].lower()
             # Fetch today's meals
             try:
-                today = date.today()
-                summary = await notion_service.get_daily_summary(today, user_id=user_id)
-                if not summary:
+                today = date.today().isoformat()
+                meals = await db.get_meals_by_date(user_id, today)
+                if not meals:
                     await tg.send_message(chat_id, "No meals found to delete today.")
                     return
                 
-                meals = await notion_service.get_meals_from_page(summary["page_id"])
                 # Find match (simple containment check)
                 matches = [m for m in meals if target in m["name"].lower()]
                 
@@ -174,13 +183,18 @@ async def handle_update(update: dict) -> None:
                 
                 # If multiple, take the last one (most recent)
                 meal_to_delete = matches[-1]
-                await notion_service.delete_meal_row(meal_to_delete["block_id"])
-                totals = await notion_service.recalculate_daily_totals(summary["page_id"])
+                await db.delete_meal(meal_to_delete["id"])
+                
+                # Fetch fresh totals
+                db_meals = await db.get_meals_by_date(user_id, today)
+                total_kcal = sum(m.get("kcal", 0) for m in db_meals)
+                profile = await db.get_user_profile(user_id)
+                target_kcal = profile.get("target_kcal", 1800)
                 
                 await tg.send_message(
                     chat_id,
                     f"🗑️ Deleted: {meal_to_delete['name']}\n\n"
-                    f"🔥 New total: {totals['total_kcal']} / {totals['target_kcal']} kcal"
+                    f"🔥 New total: {total_kcal} / {target_kcal} kcal"
                 )
                 return
             except Exception as e:
@@ -228,27 +242,36 @@ async def handle_update(update: dict) -> None:
 
 
 async def _log_and_respond(user_id: int, chat_id: int, result: dict, profile: dict) -> None:
-    """Log items to Notion and send summary to user."""
+    """Log items to DB and send summary to user."""
     items = result.get("items", [])
     if not items:
         await tg.send_message(chat_id, "I couldn't identify any food items. Try again?")
         return
 
     try:
-        # Get or create today's Notion page for this user
-        today = date.today()
+        today_iso = date.today().isoformat()
         target_kcal = profile.get("target_kcal", settings.DEFAULT_TARGET_KCAL)
-        user_name = profile.get("name", "Unknown")
-        page_id = await notion_service.get_or_create_daily_page(
-            today, user_id, user_name=user_name, target_kcal=target_kcal
-        )
-
-        # Append meal rows and update totals
-        await notion_service.append_meal_rows(page_id, items)
-        daily = await notion_service.update_daily_totals(page_id, items)
+        
+        # Save straight to local DB
+        for item in items:
+            await db.add_meal(
+                telegram_user_id=user_id,
+                date=today_iso,
+                name=item.get("name", "Unknown"),
+                kcal=item.get("kcal", 0),
+                protein_g=item.get("protein_g", 0),
+                carbs_g=item.get("carbs_g", 0),
+                fats_g=item.get("fats_g", 0),
+                source=item.get("source", "Estimated")
+            )
+            
+        # Re-fetch for daily total
+        db_meals = await db.get_meals_by_date(user_id, today_iso)
+        total_kcal = sum(m.get("kcal", 0) for m in db_meals)
+        total_protein = sum(m.get("protein_g", 0) for m in db_meals)
 
         # Build response message
-        lines = ["✅ *Logged to Notion!*\n"]
+        lines = ["✅ *Logged!*\n"]
         for item in items:
             source_emoji = "✓" if item.get("source") == "Verified" else "≈"
             lines.append(
@@ -257,13 +280,13 @@ async def _log_and_respond(user_id: int, chat_id: int, result: dict, profile: di
             )
 
         lines.append(f"\n📊 *Today's Progress:*")
-        lines.append(f"  🔥 {daily['total_kcal']} / {daily['target_kcal']} kcal")
-        remaining = daily["remaining_kcal"]
+        lines.append(f"  🔥 {total_kcal} / {target_kcal} kcal")
+        remaining = target_kcal - total_kcal
         if remaining > 0:
-            lines.append(f"  ✅ {remaining} kcal remaining")
+            lines.append(f"  ✅ {int(remaining)} kcal remaining")
         else:
-            lines.append(f"  ⚠️ Over by {abs(remaining)} kcal")
-        lines.append(f"  🥩 Protein: {daily['total_protein']}g")
+            lines.append(f"  ⚠️ Over by {int(abs(remaining))} kcal")
+        lines.append(f"  🥩 Protein: {total_protein}g")
 
         if result.get("notes"):
             lines.append(f"\n_💡 {result['notes']}_")
@@ -271,9 +294,9 @@ async def _log_and_respond(user_id: int, chat_id: int, result: dict, profile: di
         await tg.send_message(chat_id, "\n".join(lines))
 
     except Exception as e:
-        logger.error(f"Error logging to Notion: {e}", exc_info=True)
-        # Still show the estimate even if Notion fails
-        lines = ["⚠️ *Couldn't sync to Notion, but here's the estimate:*\n"]
+        logger.error(f"Error logging to DB: {e}", exc_info=True)
+        # Still show the estimate even if DB fails
+        lines = ["⚠️ *Couldn't save to database, but here's the estimate:*\n"]
         for item in items:
             lines.append(
                 f"  • {item['name']} — {item.get('kcal', 0)} kcal "
@@ -331,17 +354,25 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
 
     elif command == "/today":
         try:
-            summary = await notion_service.get_daily_summary(date.today(), user_id=user_id)
-            if summary:
-                remaining = summary["remaining_kcal"]
+            today_iso = date.today().isoformat()
+            db_meals = await db.get_meals_by_date(user_id, today_iso)
+            profile = await db.get_user_profile(user_id)
+            target_kcal = profile.get("target_kcal", 1800)
+            
+            if db_meals:
+                total_kcal = sum(m.get("kcal", 0) for m in db_meals)
+                total_protein = sum(m.get("protein_g", 0) for m in db_meals)
+                total_carbs = sum(m.get("carbs_g", 0) for m in db_meals)
+                total_fats = sum(m.get("fats_g", 0) for m in db_meals)
+                remaining = target_kcal - total_kcal
                 status = "✅ Under Limit" if remaining > 0 else "⚠️ Over Target"
                 await tg.send_message(
                     chat_id,
-                    f"📊 *Today's Summary ({summary['date']}):*\n\n"
-                    f"🔥 Calories: {summary['total_kcal']} / {summary['target_kcal']} kcal\n"
-                    f"🥩 Protein: {summary['total_protein']}g\n"
-                    f"🍞 Carbs: {summary['total_carbs']}g\n"
-                    f"🧈 Fats: {summary['total_fats']}g\n\n"
+                    f"📊 *Today's Summary ({today_iso}):*\n\n"
+                    f"🔥 Calories: {total_kcal} / {target_kcal} kcal\n"
+                    f"🥩 Protein: {total_protein}g\n"
+                    f"🍞 Carbs: {total_carbs}g\n"
+                    f"🧈 Fats: {total_fats}g\n\n"
                     f"📍 Status: {status} ({abs(remaining)} kcal {'left' if remaining > 0 else 'over'})",
                 )
             else:
@@ -410,22 +441,18 @@ async def handle_command(user_id: int, chat_id: int, text: str) -> None:
             return
 
         try:
-            summary = await notion_service.get_daily_summary(date.today(), user_id=user_id)
-            if not summary:
-                await tg.send_message(chat_id, "No meals logged today.", parse_mode="")
-                return
-
-            meals = await notion_service.get_meals_from_page(summary["page_id"])
+            today_iso = date.today().isoformat()
+            meals = await db.get_meals_by_date(user_id, today_iso)
             if not meals:
                 await tg.send_message(chat_id, "No meals logged today.", parse_mode="")
                 return
 
-            _meal_edit_state[user_id] = {"meals": meals, "page_id": summary["page_id"]}
+            _meal_edit_state[user_id] = {"meals": meals, "page_id": "local_db"}
 
             lines = ["Today's meals:\n"]
             for i, m in enumerate(meals, 1):
                 lines.append(f"{i}. {m['name']} — {m['kcal']} kcal")
-                lines.append(f"   P:{m['protein']}g  C:{m['carbs']}g  F:{m['fats']}g")
+                lines.append(f"   P:{m.get('protein_g', 0)}g  C:{m.get('carbs_g', 0)}g  F:{m.get('fats_g', 0)}g")
             lines.append("\nTo delete: reply with the number")
             lines.append("To edit: <num> <kcal> <protein> <carbs> <fats>")
             lines.append("Example: 1 350 25 30 10")

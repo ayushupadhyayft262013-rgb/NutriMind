@@ -17,12 +17,11 @@ import asyncio
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from loguru import logger
 
 from app.config import settings
 from app.usda_rag import usda_service
-
-logger = logging.getLogger(__name__)
+from app.gemini_service import NutritionAnalysisSchema
 
 
 # ─── Tools ────────────────────────────────────────────────────────────────────
@@ -206,18 +205,13 @@ def _build_agent():
 
 
 def _parse_agent_output(text: str) -> dict:
-    """Extract JSON from agent's final response."""
-    # Try to find JSON in the text
-    # First, try direct parse
+    """Extract JSON from agent's final response (Fallback if structured output fails)."""
     cleaned = text.strip()
-
-    # Remove markdown code fences if present
     if "```" in cleaned:
         lines = cleaned.split("\n")
         lines = [l for l in lines if not l.strip().startswith("```")]
         cleaned = "\n".join(lines)
 
-    # Try to find JSON object
     json_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
     if json_match:
         try:
@@ -225,7 +219,7 @@ def _parse_agent_output(text: str) -> dict:
         except json.JSONDecodeError:
             pass
 
-    logger.error(f"Could not parse agent output: {text[:300]}")
+    logger.error(f"Could not parse agent output manually: {text[:300]}")
     return {
         "items": [],
         "clarification_needed": True,
@@ -312,8 +306,18 @@ async def _run_agent_loop(llm_with_tools, tool_map: dict, messages: list) -> dic
                 messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
         else:
             # No more tool calls — agent is done
-            final_text = response.content
-            return _parse_agent_output(final_text)
+            
+            # Use structured output parsing
+            structured_llm = llm_with_tools.with_structured_output(NutritionAnalysisSchema)
+            try:
+                # Ask the LLM to format the previous messages into the final schema
+                final_response = await asyncio.to_thread(structured_llm.invoke, messages)
+                if hasattr(final_response, "model_dump"):
+                    return final_response.model_dump()
+                return final_response
+            except Exception as e:
+                logger.error(f"Structured output parsing failed: {e}. Falling back to manual parse.")
+                return _parse_agent_output(response.content)
 
     # If we hit max iterations, try to parse whatever we have
     logger.warning("Agent hit max iterations")

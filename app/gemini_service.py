@@ -1,12 +1,12 @@
 """Gemini 2.0 Flash integration for multimodal nutrition analysis."""
 
 import json
-import logging
 from google import genai
 from google.genai import types
-from app.config import settings
+from pydantic import BaseModel, Field
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from app.config import settings
 
 SYSTEM_INSTRUCTION = """You are NutriMind, an expert nutrition analyst AI. Your job is to analyze food inputs (text descriptions, images, or audio transcriptions) and return structured nutritional estimates.
 
@@ -17,29 +17,31 @@ RULES:
 4. For complex/homemade dishes, DECOMPOSE them into individual ingredients and sum up the macros.
 5. Use Indian food portions and serving sizes as defaults when the user is from India.
 6. Look for scale references in images (plates, hands, cutlery, bottles) to estimate portion sizes.
-7. If confidence is below 0.7 for any item, include a "clarification_question" asking the user for specifics.
+7. If confidence is below 0.7 for any item, set clarification_needed to true and ask a clarification_question.
 8. When user preferences are provided, use them to override defaults (e.g., if the user's "bowl" is 300ml, use that).
 9. GROUP identical items into a single entry with summed macros (e.g., "5 boiled eggs" -> one item "5 Boiled Eggs" with 5x calories, NOT 5 separate items).
 
-ALWAYS respond in this exact JSON format and NOTHING else:
-{
-  "items": [
-    {
-      "name": "Item name",
-      "kcal": 250,
-      "protein_g": 15.0,
-      "carbs_g": 30.0,
-      "fats_g": 8.0,
-      "confidence": 0.85,
-      "source": "Estimated"
-    }
-  ],
-  "clarification_needed": false,
-  "clarification_question": null,
-  "notes": "Optional reasoning or breakdown notes"
-}
+ALWAYS respond matching the requested JSON schema.
 """
 
+class FoodItemSchema(BaseModel):
+    name: str = Field(description="Name of the food item")
+    kcal: int = Field(description="Total calories in kcal")
+    protein_g: float = Field(description="Total protein in grams")
+    carbs_g: float = Field(description="Total carbs in grams")
+    fats_g: float = Field(description="Total fats in grams")
+    confidence: float = Field(description="Confidence score between 0.0 and 1.0")
+    source: str = Field(description="One of: Verified, Estimated, User-Defined")
+
+class NutritionAnalysisSchema(BaseModel):
+    items: list[FoodItemSchema]
+    clarification_needed: bool = Field(description="True if confidence is low and more info is needed")
+    clarification_question: str | None = Field(description="Question to ask if clarification is needed, else null")
+    notes: str | None = Field(description="Optional reasoning or summary notes")
+
+class IntentSchema(BaseModel):
+    action: str = Field(description="Action to perform: 'DELETE' or 'LOG'")
+    target: str | None = Field(description="Target to delete if action is DELETE")
 
 class GeminiService:
     """Handles all Gemini API interactions for food analysis."""
@@ -89,6 +91,7 @@ class GeminiService:
         pref_context = self._build_preference_context(preferences or {})
         prompt = f"{pref_context}\n\nUSER INPUT: {text}" if pref_context else f"USER INPUT: {text}"
 
+        logger.info(f"Gemini analyze_text called with text length: {len(text)}")
         response = self.client.models.generate_content(
             model=self.model,
             contents=prompt,
@@ -96,8 +99,14 @@ class GeminiService:
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
                 response_mime_type="application/json",
+                response_schema=NutritionAnalysisSchema,
             ),
         )
+        
+        # Log token usage
+        if response.usage_metadata:
+            logger.info(f"Tokens - prompt: {response.usage_metadata.prompt_token_count}, candidates: {response.usage_metadata.candidates_token_count}, total: {response.usage_metadata.total_token_count}")
+            
         return self._parse_response(response.text)
 
     async def analyze_image(
@@ -111,6 +120,7 @@ class GeminiService:
             + "\nIdentify all food items, estimate portions using visible scale references (plates, hands, cutlery), and provide nutritional breakdown."
         )
 
+        logger.info(f"Gemini analyze_image called. Image size: {len(image_bytes)} bytes")
         response = self.client.models.generate_content(
             model=self.model,
             contents=[
@@ -121,8 +131,14 @@ class GeminiService:
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
                 response_mime_type="application/json",
+                response_schema=NutritionAnalysisSchema,
             ),
         )
+        
+        # Log token usage
+        if response.usage_metadata:
+            logger.info(f"Tokens - prompt: {response.usage_metadata.prompt_token_count}, candidates: {response.usage_metadata.candidates_token_count}, total: {response.usage_metadata.total_token_count}")
+            
         return self._parse_response(response.text)
 
     async def analyze_audio(self, audio_bytes: bytes, preferences: dict | None = None) -> dict:
@@ -133,6 +149,7 @@ class GeminiService:
             "Listen to it, extract the food items and quantities, and provide nutritional breakdown."
         )
 
+        logger.info(f"Gemini analyze_audio called. Audio size: {len(audio_bytes)} bytes")
         response = self.client.models.generate_content(
             model=self.model,
             contents=[
@@ -143,8 +160,14 @@ class GeminiService:
                 system_instruction=SYSTEM_INSTRUCTION,
                 temperature=0.3,
                 response_mime_type="application/json",
+                response_schema=NutritionAnalysisSchema,
             ),
         )
+        
+        # Log token usage
+        if response.usage_metadata:
+            logger.info(f"Tokens - prompt: {response.usage_metadata.prompt_token_count}, candidates: {response.usage_metadata.candidates_token_count}, total: {response.usage_metadata.total_token_count}")
+            
         return self._parse_response(response.text)
 
 
@@ -152,22 +175,23 @@ class GeminiService:
         """Analyze if text is a DELETE request or regular logging."""
         prompt = (
             f"Analyze this user input: '{text}'\n"
-            "Determine if the user wants to DELETE/REMOVE a previously logged meal, or usage is just logging food.\n"
-            "Respond in JSON:\n"
-            "{\n"
-            '  "action": "DELETE" or "LOG",\n'
-            '  "target": "food name to delete" (only if action is DELETE)\n'
-            "}"
+            "Determine if the user wants to DELETE/REMOVE a previously logged meal, or usage is just logging food."
         )
 
+        logger.info(f"Gemini detect_intent called text length: {len(text)}")
         response = self.client.models.generate_content(
             model=self.model,
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
                 response_mime_type="application/json",
+                response_schema=IntentSchema,
             ),
         )
+        
+        if response.usage_metadata:
+            logger.info(f"Tokens - prompt: {response.usage_metadata.prompt_token_count}, candidates: {response.usage_metadata.candidates_token_count}, total: {response.usage_metadata.total_token_count}")
+            
         return self._parse_response(response.text)
 
 

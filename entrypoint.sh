@@ -28,6 +28,10 @@ else
     echo "IFCT data already merged, skipping."
 fi
 
+# Run database migrations
+echo "Running database migrations..."
+alembic upgrade head
+
 # Start uvicorn in background
 python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT $SSL_ARGS &
 UVICORN_PID=$!

@@ -9,14 +9,17 @@ import math
 from contextlib import asynccontextmanager
 from datetime import timedelta
 
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import init_db, get_all_users, get_user_profile, upsert_user_profile
+from app.database import init_db, get_all_users, get_user_profile, upsert_user_profile, get_session, add_meal, get_meals_by_date, update_meal, delete_meal
 from app.telegram_handler import handle_update
+from app.auth import get_current_user_from_cookie, create_access_token
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -57,8 +60,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Mount static files (if we had them, currently using CDN/Tailwind)
-# app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Optional: Add CORS if needed later
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -70,10 +82,57 @@ _insights_cache = {}
 
 
 @app.get("/")
-async def root():
-    """Redirect root to dashboard."""
-    return RedirectResponse(url="/dashboard")
+async def root(request: Request):
+    """Redirect root to dashboard if logged in, otherwise login."""
+    user_id = await get_current_user_from_cookie(request)
+    if user_id:
+        return RedirectResponse(url="/dashboard")
+    return RedirectResponse(url="/login")
 
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Simple login page."""
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.post("/login")
+async def login_submit(telegram_id: int = Form(...)):
+    """Mock login for prototype: just submit Telegram ID."""
+    try:
+        user = await get_user_profile(telegram_id)
+        if not user:
+             # Basic auto-provisioning for testing
+             from app.database import upsert_user_profile
+             await upsert_user_profile(telegram_id, name=f"User {telegram_id}")
+             
+        access_token = create_access_token(data={"sub": telegram_id})
+        response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+        response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=86400 * 7)
+        return response
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return HTMLResponse("Login failed", status_code=500)
+
+@app.post("/logout")
+async def logout():
+    response = RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("session_token")
+    return response
+
+@app.get("/api/switch_user")
+async def switch_user(user_id: int):
+    """Switch user active session."""
+    try:
+        user = await get_user_profile(user_id)
+        if not user:
+             return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+             
+        access_token = create_access_token(data={"sub": user_id})
+        response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+        response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=86400 * 7)
+        return response
+    except Exception as e:
+        logger.error(f"Switch user error: {e}")
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/health")
 async def health_check():
@@ -132,16 +191,21 @@ async def get_common_context(request: Request, user_id: int = None, date_str: st
         "meals": [], "page_id": ""
     }
 
-    if user_id and settings.NOTION_DAILY_LOG_DB_ID:
+    # Fetch DB Meals instead of Notion Meals
+    if user_id:
         try:
-            summary = await notion_service.get_daily_summary(selected_date, user_id=user_id)
-            if summary:
-                stats.update(summary)
-                # Fetch meals if page exists
-                if summary["page_id"]:
-                    stats["meals"] = await notion_service.get_meals_from_page(summary["page_id"])
+            db_meals = await get_meals_by_date(user_id, selected_date.isoformat())
+            stats["meals"] = db_meals
+            
+            # Calculate totals from DB
+            stats["total_kcal"] = sum(m.get("kcal", 0) for m in db_meals)
+            stats["total_protein"] = sum(m.get("protein_g", 0) for m in db_meals)
+            stats["total_carbs"] = sum(m.get("carbs_g", 0) for m in db_meals)
+            stats["total_fats"] = sum(m.get("fats_g", 0) for m in db_meals)
+            stats["page_id"] = "" # No longer strictly tied to Notion page ID for reading
+            
         except Exception as e:
-            logger.error(f"Error fetching data: {e}")
+            logger.error(f"Error fetching data from DB: {e}")
 
     # Calculations
     remaining_kcal = stats["target_kcal"] - stats["total_kcal"]
@@ -190,44 +254,59 @@ async def get_common_context(request: Request, user_id: int = None, date_str: st
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, user_id: int = None, date: str = None):
+async def dashboard(request: Request, date: str = None):
     """Home / Daily Playground."""
+    user_id = await get_current_user_from_cookie(request)
+    if not user_id:
+        return RedirectResponse(url="/login")
+        
     context = await get_common_context(request, user_id, date)
     context["active_tab"] = "home"
     return templates.TemplateResponse("home.html", context)
 
 
 @app.get("/pantry", response_class=HTMLResponse)
-async def pantry(request: Request, user_id: int = None, date: str = None):
+async def pantry(request: Request, date: str = None):
     """The Pantry (Food Logger + Search)."""
+    user_id = await get_current_user_from_cookie(request)
+    if not user_id:
+        return RedirectResponse(url="/login")
+        
     context = await get_common_context(request, user_id, date)
     context["active_tab"] = "pantry"
     return templates.TemplateResponse("pantry.html", context)
 
 
 @app.get("/garden", response_class=HTMLResponse)
-async def garden(request: Request, user_id: int = None, date: str = None):
+async def garden(request: Request, date: str = None):
     """The Garden (Progress & Weekly View)."""
+    user_id = await get_current_user_from_cookie(request)
+    if not user_id:
+        return RedirectResponse(url="/login")
+        
     context = await get_common_context(request, user_id, date)
     context["active_tab"] = "garden"
     
-    # Fetch weekly data for the chart
-    from app.notion_service import notion_service
+    # Fetch weekly data from local DB
     import datetime as dt
     end_date = dt.date.fromisoformat(context["date_iso"])
     
     days_data = []
     try:
-        summaries = await notion_service.get_weekly_summaries(end_date, user_id=context["current_user_id"])
-        # Format for template
-        for s in summaries:
-            d_obj = dt.date.fromisoformat(s["date"])
+        for i in range(6, -1, -1):
+            day = end_date - dt.timedelta(days=i)
+            day_iso = day.isoformat()
+            
+            db_meals = await get_meals_by_date(user_id, day_iso)
+            day_kcal = sum(m.get("kcal", 0) for m in db_meals)
+            day_protein = sum(m.get("protein_g", 0) for m in db_meals)
+            
             days_data.append({
-                "weekday": d_obj.strftime("%a"),
-                "kcal": s["total_kcal"],
-                "target": s["target_kcal"],
-                "protein": s["total_protein"],
-                "is_today": s["date"] == context["date_iso"]
+                "weekday": day.strftime("%a"),
+                "kcal": day_kcal,
+                "target": context["target_kcal"],
+                "protein": day_protein,
+                "is_today": day_iso == context["date_iso"]
             })
     except Exception as e:
         logger.error(f"Garden weekly data error: {e}")
@@ -237,9 +316,12 @@ async def garden(request: Request, user_id: int = None, date: str = None):
 
 
 @app.get("/profile", response_class=HTMLResponse)
-async def profile(request: Request, user_id: int = None):
+async def profile(request: Request):
     """Profile Settings."""
-    # Date doesn't matter much here, but we need user context
+    user_id = await get_current_user_from_cookie(request)
+    if not user_id:
+         return RedirectResponse(url="/login")
+         
     context = await get_common_context(request, user_id)
     context["active_tab"] = "profile"
     return templates.TemplateResponse("profile.html", context)
@@ -295,16 +377,21 @@ async def add_meal_from_search(request: Request):
             date_obj, user_id, user_name, target_kcal
         )
         
-        # 2. Append meal row
-        items = [{
-            "name": data.get("name"),
-            "kcal": data.get("kcal"),
-            "protein_g": data.get("protein"),
-            "carbs_g": data.get("carbs"),
-            "fats_g": data.get("fats")
-        }]
+        # 2. Add to Local DB First
+        await add_meal(
+            telegram_user_id=user_id,
+            date=date_iso,
+            name=data.get("name"),
+            kcal=data.get("kcal"),
+            protein_g=data.get("protein"),
+            carbs_g=data.get("carbs"),
+            fats_g=data.get("fats"),
+            source="Search"
+        )
         
-        await notion_service.update_daily_totals(page_id, items)
+        # 3. Fire-and-forget Notion Sync (for Phase 2 async logic. For now, we still sync synchronously or skip entirely if preferred. We'll leave synchronous for now, but background tasks are better)
+        # Note: Removing synchronous notion write as requested by transition roadmap (Phase 1/2 decoupling Notion)
+        # We will ONLY write to DB here for instantaneous UX. 
         
         return {"ok": True}
     except Exception as e:
@@ -336,28 +423,28 @@ async def update_profile_stats(
 
 
 @app.put("/api/meals/{block_id}")
-async def update_meal(block_id: str, request: Request):
+async def update_meal_api(block_id: str, request: Request):
     """Update an existing meal row."""
-    from app.notion_service import notion_service
-    
+    # Using 'block_id' as parameter, but it's actually the local sqlite DB 'id' now 
+    # since we swapped Notion for local DB.
     try:
+        user_id = await get_current_user_from_cookie(request)
+        if not user_id:
+             return JSONResponse({"ok": False, "error": "Unauthorized"}, status_code=401)
+             
         data = await request.json()
-        page_id = data.get("page_id")
+        meal_id = int(block_id)
         
-        if not page_id:
-            return JSONResponse({"ok": False, "error": "page_id is required"}, status_code=400)
-            
-        meal_update = {
-            "name": data.get("name"),
-            "kcal": data.get("kcal"),
-            "protein": data.get("protein_g"),
-            "carbs": data.get("carbs_g"),
-            "fats": data.get("fats_g"),
-        }
+        await update_meal(
+            meal_id=meal_id,
+            name=data.get("name"),
+            kcal=data.get("kcal"),
+            protein_g=data.get("protein_g"),
+            carbs_g=data.get("carbs_g"),
+            fats_g=data.get("fats_g")
+        )
         
-        await notion_service.update_meal_row(block_id, meal_update)
-        await notion_service.recalculate_daily_totals(page_id)
-        
+        # Notion Sync decoupled
         return {"ok": True}
     except Exception as e:
         logger.error(f"Update meal error: {e}", exc_info=True)
@@ -365,17 +452,18 @@ async def update_meal(block_id: str, request: Request):
 
 
 @app.delete("/api/meals/{block_id}")
-async def delete_meal(block_id: str, page_id: str):
+async def delete_meal_api(block_id: str, request: Request):
     """Delete a meal row."""
-    from app.notion_service import notion_service
-    
     try:
-        if not page_id:
-             return JSONResponse({"ok": False, "error": "page_id is required"}, status_code=400)
-
-        await notion_service.delete_meal_row(block_id)
-        await notion_service.recalculate_daily_totals(page_id)
+        user_id = await get_current_user_from_cookie(request)
+        if not user_id:
+             return JSONResponse({"ok": False, "error": "Unauthorized"}, status_code=401)
+             
+        meal_id = int(block_id)
         
+        await delete_meal(meal_id)
+        
+        # Notion Sync decoupled
         return {"ok": True}
     except Exception as e:
         logger.error(f"Delete meal error: {e}", exc_info=True)

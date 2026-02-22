@@ -23,6 +23,9 @@ class Settings:
     # Webhook
     WEBHOOK_BASE_URL: str = os.getenv("WEBHOOK_BASE_URL", "http://localhost:8000")
 
+    # Auth
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key_change_in_production")
+
     # Defaults
     DEFAULT_TARGET_KCAL: int = int(os.getenv("DEFAULT_TARGET_KCAL", "1800"))
     DEFAULT_TARGET_PROTEIN: int = int(os.getenv("DEFAULT_TARGET_PROTEIN", "130"))

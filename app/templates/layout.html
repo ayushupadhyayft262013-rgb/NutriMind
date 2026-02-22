@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FF8B66">
+    <link rel="manifest" crossorigin="use-credentials" href="/static/manifest.json">
     <title>{% block title %}NutriMind{% endblock %}</title>
 
     <!-- Fonts -->
@@ -177,6 +179,19 @@
                 document.documentElement.classList.add('dark');
                 localStorage.theme = 'dark';
             }
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
         }
     </script>
     {% block scripts %}{% endblock %}

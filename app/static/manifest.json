@@ -1,0 +1,21 @@
+{
+    "name": "NutriMind",
+    "short_name": "NutriMind",
+    "description": "AI-powered nutrition tracker",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#2563EB",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥑</text></svg>",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥑</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ]
+}

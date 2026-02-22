@@ -762,7 +762,7 @@
         const CURRENT_USER_ID = "{{ current_user_id }}";
 
         function changeUser(userId) {
-            window.location.href = `/status?date=${DATE_ISO}&user_id=${userId}`;
+            window.location.href = `/api/switch_user?user_id=${userId}`;
         }
 
         // 1. Ring Animation
