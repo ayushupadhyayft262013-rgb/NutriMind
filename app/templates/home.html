@@ -64,7 +64,8 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-protein w-[{{ protein_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_protein|round(1) }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ "%.1f"|format(total_protein)
+                }}g</span>
         </div>
         <!-- Carbs -->
         <div
@@ -73,7 +74,8 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-carbs w-[{{ carbs_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_carbs|round(1) }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ "%.1f"|format(total_carbs)
+                }}g</span>
         </div>
         <!-- Fats -->
         <div
@@ -82,7 +84,7 @@
             <div class="w-full h-1.5 bg-surface-alt dark:bg-white/10 rounded-full mb-2 overflow-hidden">
                 <div class="h-full bg-accent-fats w-[{{ fats_pct }}%]"></div>
             </div>
-            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ total_fats|round(1) }}g</span>
+            <span class="text-sm font-bold text-text-main dark:text-text-bright">{{ "%.1f"|format(total_fats) }}g</span>
         </div>
     </div>
 
@@ -110,7 +112,7 @@
             <!-- Hover Actions -->
             <div
                 class="absolute top-2 right-2 flex gap-1 transform translate-x-10 group-hover:translate-x-0 transition-transform duration-300">
-                <button onclick="editMeal('{{ meal.block_id }}')"
+                <button onclick="editMeal('{{ meal.id }}')"
                     class="w-6 h-6 rounded-full bg-surface-alt dark:bg-white/10 flex items-center justify-center text-text-muted hover:text-primary">
                     <span class="material-symbols-outlined text-[14px]">edit</span>
                 </button>
@@ -272,7 +274,7 @@
     // Store meals in a JS object
     const mealsData = {
         {% for meal in meals %}
-    "{{ meal.block_id }}": {
+    "{{ meal.id }}": {
         name: "{{ meal.name }}",
             kcal: { { meal.kcal } },
         protein: { { meal.protein_g } },
@@ -290,14 +292,14 @@
         document.getElementById('editName').value = meal.name;
         document.getElementById('editKcal').value = meal.kcal;
 
-        document.getElementById('editProtein').value = meal.protein;
-        document.getElementById('dispProtein').textContent = meal.protein + 'g';
+        document.getElementById('editProtein').value = Math.round(meal.protein);
+        document.getElementById('dispProtein').textContent = Math.round(meal.protein) + 'g';
 
-        document.getElementById('editCarbs').value = meal.carbs;
-        document.getElementById('dispCarbs').textContent = meal.carbs + 'g';
+        document.getElementById('editCarbs').value = Math.round(meal.carbs);
+        document.getElementById('dispCarbs').textContent = Math.round(meal.carbs) + 'g';
 
-        document.getElementById('editFats').value = meal.fats;
-        document.getElementById('dispFats').textContent = meal.fats + 'g';
+        document.getElementById('editFats').value = Math.round(meal.fats);
+        document.getElementById('dispFats').textContent = Math.round(meal.fats) + 'g';
 
         // Show Modal
         const modal = document.getElementById('mealEditorModal');
