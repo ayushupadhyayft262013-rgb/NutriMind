@@ -9,9 +9,9 @@
 
 # 🧠 NutriMind — AI-Powered Nutrition Tracker
 
-**NutriMind** is a production-grade, AI-powered nutrition tracking system that lets users log meals through **Telegram** (text, photos, or voice notes), leverages a **LangChain Agent** powered by **Google Gemini 2.0 Flash** with a **USDA FoodData Central** vector database to deliver **verified nutritional data**, and syncs everything to **Notion** — with a beautiful real-time **web dashboard** for at-a-glance daily summaries.
+**NutriMind** is a production-grade, AI-powered nutrition tracking system that lets users log meals through **Telegram** (text, photos, or voice notes), leverages a **LangChain Agent** powered by **Google Gemini 2.0 Flash** with a **USDA FoodData Central** vector database to deliver **verified nutritional data**, and syncs everything to a local **SQLite** database for sub-millisecond **real-time web dashboard** visualization — with **Notion** acting as an organized, long-term backup export.
 
-> Built end-to-end: LangChain Agent → USDA RAG → Gemini AI → backend API → Telegram bot → web dashboard → containerized deployment → CI/CD pipeline.
+> Built end-to-end: LangChain Agent → USDA RAG → Gemini AI → FastAPI → SQLite (SQLModel) + JWT Auth → PWA Web Dashboard → Containerized Deployment.
 
 ---
 
@@ -24,14 +24,15 @@
 | 🤖 **LangChain Agent** | Autonomous agent with `usda_lookup` and `calculator` tools for precise macro computation |
 | 📊 **USDA FoodData Central** | 7,756 verified foods embedded as vectors — sub-millisecond cosine similarity search via NumPy |
 | 💬 **Telegram Bot Interface** | Full conversational bot with onboarding, meal logging, target setting, and meal editing |
-| 📈 **Live Web Dashboard** | Mobile-optimized status page with calorie ring chart, macro breakdowns, and interactive meal editing |
-| 📝 **Notion Sync** | Every meal is logged to a personal Notion database with daily pages, tables, and running totals |
+| 🛡️ **JWT Authentication** | Secure dashboard access managed via JSON Web Tokens bounding user sessions |
+| 📈 **Live PWA Dashboard** | Progressive Web App with offline caching, mobile-first design, interactive meal editing, and sub-100ms load times |
+| 📝 **Notion Export Backup** | Every meal logged to the local database is asynchronously backed up to personal Notion tables and daily pages |
 | 🎯 **Customizable Targets** | Set daily calorie and macro targets via Telegram (`/set_targets`) |
 | ✏️ **Meal Editing** | Edit or delete meals from both the web dashboard and Telegram (`/edit_meals`) |
 | 🧠 **Preference Learning** | Say "Remember: my bowl is 300ml" and the bot learns your personal food preferences |
 | 📸 **Multi-Modal Input** | Text descriptions, food photos, and voice notes — all analyzed by Gemini 2.0 Flash |
-| 🐳 **Dockerized Deployment** | One-command deploy with Docker Compose, persistent data, SSL certificates |
-| 🔄 **CI/CD Pipeline** | Push to `main` → GitHub Actions auto-deploys to DigitalOcean, including webhook re-registration |
+| 🐳 **Dockerized Deployment** | Hardened containerization strategy scaling a non-root user via SSL mounted webhooks |
+| 🔄 **CI/CD Pipeline** | Push to `main` → GitHub Actions auto-deploys to DigitalOcean, applying programmatic Alembic Migrations |
 
 
 ---
@@ -60,13 +61,13 @@
 └──────────────┘     │                   │     └────────┬────────┘
                      │   ┌───────────┐   │              │
 ┌──────────────┐     │   │  SQLite   │   │     ┌────────▼────────┐
-│ Web Dashboard│◀────│   │  (Users,  │   │     │  USDA Vector DB  │
-│  (Browser)   │────▶│   │  Prefs)   │   │     │  (NumPy + JSON)  │
-└──────────────┘     │   └───────────┘   │     └─────────────────┘
-                     │                   │
-                     │                   │     ┌─────────────────┐
-                     │                   │────▶│   Notion API     │
-                     │                   │◀────│  (Daily Logs)    │
+│ PWA Dashboard│◀────│   │  (Users,  │   │     │  USDA Vector DB  │
+│  (Browser)   │────▶│   │  Meals,   │   │     │  (NumPy + JSON)  │
+└──────────────┘     │   │  Prefs)   │   │     └─────────────────┘
+                     │   └───────────┘   │
+                     │         │         │     ┌─────────────────┐
+                     │         └─────────│────▶│   Notion API     │
+                     │                   │◀────│  (DB Export)     │
                      └──────────────────┘     └─────────────────┘
                             │
                      ┌──────┴──────┐
@@ -85,8 +86,9 @@
    - USDA matches → **Verified** data, adjusted to portion weight via calculator tool
    - No match → Gemini estimates → **Estimated** data
 4. **Image/Audio inputs** → Direct Gemini 2.0 Flash analysis
-5. Results are stored in Notion (daily page + table rows) and SQLite (user profiles)
-6. Web dashboard reads from Notion and displays real-time stats
+5. Results are instantly stored within the highly-performant local **SQLite (SQLModel)** database.
+6. The event is queued for asynchronous export to the user's connected **Notion API**.
+7. The JWT-authenticated PWA dashboard queries SQLite and instantly renders real-time stats (Time-to-first-byte < 100ms).
 
 ---
 
@@ -154,10 +156,10 @@ The agent properly decomposes beverages (not treating milk tea as pure milk):
 | **Vector Search** | NumPy + Google Embeddings | 7,756 USDA foods, cosine similarity in <1ms |
 | **AI / ML** | Google Gemini 2.0 Flash | Food recognition, nutrition estimation, voice transcription |
 | **Backend** | Python 3.11+, FastAPI, Uvicorn | Async REST API, webhook handling, business logic |
-| **Database** | SQLite (aiosqlite) | User profiles, preferences, onboarding state |
-| **Data Store** | Notion API | Daily nutrition logs, meal tables, running totals |
+| **Database** | SQLite + SQLModel | Primary real-time operational database; mapped dynamically using Alembic migrations |
+| **Data Store** | Notion API | Daily nutrition logs export sink; functions as human-readable cold storage |
 | **Bot Platform** | Telegram Bot API | User interface — text, photo, and voice input |
-| **Frontend** | HTML5, CSS3, JavaScript, Jinja2 | Real-time dashboard with interactive meal editing |
+| **Frontend** | HTML5, Tailwind, JS, Jinja2 | Progressive Web App (PWA) manifesting interactive dashboards and JWT gating |
 | **Containerization** | Docker, Docker Compose | Reproducible builds, volume persistence, SSL mounting |
 | **CI/CD** | GitHub Actions | Auto-deploy on push to `main` via SSH |
 | **Infrastructure** | DigitalOcean Droplet | Cloud hosting with self-signed SSL certificates |
@@ -170,19 +172,19 @@ The agent properly decomposes beverages (not treating milk tea as pure milk):
 Project_Nutrition/
 ├── app/
 │   ├── main.py              # FastAPI app, routes, status dashboard
+│   ├── auth.py              # JWT Authentication and Route security middleware
 │   ├── agent.py             # LangChain Agent (Gemini + USDA tools)
 │   ├── usda_rag.py          # NumPy vector search over USDA embeddings
 │   ├── telegram_handler.py  # Command routing, meal logging, edit flows
-│   ├── telegram_client.py   # Thin async Telegram Bot API client
-│   ├── gemini_service.py    # Gemini 2.0 Flash integration (text/image/audio)
-│   ├── nutrition_engine.py  # Food analysis pipeline & clarification handling
-│   ├── notion_service.py    # Notion database CRUD: pages, tables, totals
-│   ├── database.py          # SQLite: user profiles, preferences, state
+│   ├── gemini_service.py    # Gemini 2.0 Flash integration enforcing Pydantic schemas
+│   ├── notion_service.py    # Notion data export tool (Asynchronous backup)
+│   ├── database.py          # SQLite/SQLModel: User profiles, tracked meals, preferences
 │   ├── onboarding.py        # Multi-step conversational onboarding flow
 │   ├── preferences.py       # User preference learning ("Remember: ...")
 │   ├── config.py            # Environment-based configuration
-│   └── templates/
-│       └── status.html      # Dashboard: calorie ring, macros, meal editing
+│   ├── static/              # Service Worker (sw.js) and Web App manifest (manifest.json)
+│   └── templates/           # Fully responsive PWA logic embedded inside HTML templates
+├── alembic/                 # Managed SQLModel auto-generated database migration scripts
 ├── scripts/
 │   └── ingest_usda.py       # One-time USDA data download, parse & embed
 ├── data/                    # Generated: USDA vector store (gitignored)
@@ -339,8 +341,9 @@ SSL_KEYFILE=/app/certs/key.pem
 - **Third-Party Integration** — Telegram Bot API, Notion API, Google Generative AI SDK, USDA FoodData Central
 - **DevOps & Deployment** — Docker containerization, Docker Compose, GitHub Actions CI/CD, SSL certificates
 - **Cloud Infrastructure** — DigitalOcean droplet provisioning, SSH-based deployments, self-signed HTTPS
-- **Database Design** — SQLite for user state, Notion for structured nutrition data, NumPy vector store for USDA search
-- **UI/UX Design** — Mobile-first dark theme dashboard with animations, glassmorphism, and micro-interactions
+- **Data & Migration Engines** — Transitioning reliance from third-party operational APIs into robust SQLAlchemy ORMs utilizing programmatic Alembic migrations
+- **DevOps & IT Security** — Hardening docker profiles to non-root privileges, isolating environmental variables, handling reverse proxy logic, and automating CI integrations.
+- **UI/UX Design** — Mobile-first PWA dark theme dashboard powered by ServiceWorkers for offline capacity mappings.
 
 ---
 
