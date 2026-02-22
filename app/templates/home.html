@@ -276,10 +276,10 @@
         {% for meal in meals %}
     "{{ meal.id }}": {
         name: "{{ meal.name }}",
-            kcal: {{ meal.kcal }},
-        protein: {{ meal.protein_g }},
-        carbs: {{ meal.carbs_g }},
-        fats: {{ meal.fats_g }}
+            kcal: { { meal.kcal } },
+        protein: { { meal.protein_g } },
+        carbs: { { meal.carbs_g } },
+        fats: { { meal.fats_g } }
     },
     {% endfor %}
     };
@@ -304,14 +304,21 @@
         // Show Modal
         const modal = document.getElementById('mealEditorModal');
         const panel = document.getElementById('modalPanel');
+        const bottomNav = document.getElementById('main-bottom-nav');
+
         modal.classList.remove('hidden');
         panel.classList.remove('translate-y-full');
+        if (bottomNav) bottomNav.classList.add('translate-y-32', 'opacity-0');
     }
 
     function closeEditModal() {
         const modal = document.getElementById('mealEditorModal');
         const panel = document.getElementById('modalPanel');
+        const bottomNav = document.getElementById('main-bottom-nav');
+
         panel.classList.add('translate-y-full');
+        if (bottomNav) bottomNav.classList.remove('translate-y-32', 'opacity-0');
+
         setTimeout(() => modal.classList.add('hidden'), 300);
     }
 
