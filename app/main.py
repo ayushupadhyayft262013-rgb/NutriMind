@@ -157,7 +157,6 @@ async def telegram_webhook(request: Request):
 
 async def get_common_context(request: Request, user_id: int = None, date_str: str = None):
     """Helper to fetch common context data for all dashboard pages."""
-    from app.notion_service import notion_service
     
     today = __import__("datetime").date.today()
     if date_str:
@@ -184,9 +183,10 @@ async def get_common_context(request: Request, user_id: int = None, date_str: st
     
     current_user_profile = await get_user_profile(user_id) if user_id else None
 
-    # Default Stats
+    # Default Stats — use user's profile target if available
+    user_target_kcal = current_user_profile.get("target_kcal", settings.DEFAULT_TARGET_KCAL) if current_user_profile else settings.DEFAULT_TARGET_KCAL
     stats = {
-        "total_kcal": 0, "target_kcal": settings.DEFAULT_TARGET_KCAL,
+        "total_kcal": 0, "target_kcal": user_target_kcal,
         "total_protein": 0, "total_carbs": 0, "total_fats": 0,
         "meals": [], "page_id": ""
     }
@@ -215,11 +215,14 @@ async def get_common_context(request: Request, user_id: int = None, date_str: st
     circumference = 2 * math.pi * 40
     ring_offset = circumference * (1 - progress)
 
-    # Macro percentages (safe div)
-    macros_sum = stats["total_protein"] + stats["total_carbs"] + stats["total_fats"]
-    protein_pct = int((stats["total_protein"] / macros_sum) * 100) if macros_sum else 0
-    carbs_pct = int((stats["total_carbs"] / macros_sum) * 100) if macros_sum else 0
-    fats_pct = int((stats["total_fats"] / macros_sum) * 100) if macros_sum else 0
+    # Macro percentages based on caloric contribution (P=4kcal/g, C=4kcal/g, F=9kcal/g)
+    protein_kcal = stats["total_protein"] * 4
+    carbs_kcal = stats["total_carbs"] * 4
+    fats_kcal = stats["total_fats"] * 9
+    macro_kcal_sum = protein_kcal + carbs_kcal + fats_kcal
+    protein_pct = int((protein_kcal / macro_kcal_sum) * 100) if macro_kcal_sum else 0
+    carbs_pct = int((carbs_kcal / macro_kcal_sum) * 100) if macro_kcal_sum else 0
+    fats_pct = int((fats_kcal / macro_kcal_sum) * 100) if macro_kcal_sum else 0
 
     return {
         "request": request,
@@ -292,6 +295,8 @@ async def garden(request: Request, date: str = None):
     end_date = dt.date.fromisoformat(context["date_iso"])
     
     days_data = []
+    streak_days = 0
+    today_protein = 0.0
     try:
         for i in range(6, -1, -1):
             day = end_date - dt.timedelta(days=i)
@@ -308,11 +313,35 @@ async def garden(request: Request, date: str = None):
                 "protein": day_protein,
                 "is_today": day_iso == context["date_iso"]
             })
+            
+            # Track today's protein
+            if day_iso == context["date_iso"]:
+                today_protein = day_protein
+        
+        # Compute streak: count consecutive days (backwards from today) that have meals
+        streak_days = 0
+        check_date = dt.date.today()
+        for _ in range(365):  # max 1 year
+            day_meals = await get_meals_by_date(user_id, check_date.isoformat())
+            if day_meals:
+                streak_days += 1
+                check_date -= dt.timedelta(days=1)
+            else:
+                break
+                
     except Exception as e:
         logger.error(f"Garden weekly data error: {e}")
 
+    # Get target protein from user profile
+    user_profile = context.get("user")
+    target_protein = user_profile.get("target_protein", settings.DEFAULT_TARGET_PROTEIN) if user_profile else settings.DEFAULT_TARGET_PROTEIN
+
     context["days_data"] = days_data
+    context["streak_days"] = streak_days
+    context["today_protein"] = today_protein
+    context["target_protein"] = target_protein
     return templates.TemplateResponse("garden.html", context)
+
 
 
 @app.get("/profile", response_class=HTMLResponse)
@@ -359,39 +388,23 @@ async def search_food(q: str):
 
 @app.post("/api/meals/add_from_search")
 async def add_meal_from_search(request: Request):
-    """Add a meal directly from search results."""
-    from app.notion_service import notion_service
-    
+    """Add a meal directly from search results (writes to local SQLite only)."""
     try:
         data = await request.json()
         user_id = int(data.get("user_id"))
         date_iso = data.get("date")
         
-        # 1. Ensure daily page exists
-        date_obj = __import__("datetime").date.fromisoformat(date_iso)
-        user_profile = await get_user_profile(user_id)
-        user_name = user_profile["name"] if user_profile else "Unknown"
-        target_kcal = user_profile["target_kcal"] if user_profile else 1800
-        
-        page_id = await notion_service.get_or_create_daily_page(
-            date_obj, user_id, user_name, target_kcal
-        )
-        
-        # 2. Add to Local DB First
+        # Write directly to local DB — Notion sync decoupled
         await add_meal(
             telegram_user_id=user_id,
             date=date_iso,
             name=data.get("name"),
-            kcal=data.get("kcal"),
-            protein_g=data.get("protein"),
-            carbs_g=data.get("carbs"),
-            fats_g=data.get("fats"),
+            kcal=data.get("kcal", 0),
+            protein_g=data.get("protein", 0),
+            carbs_g=data.get("carbs", 0),
+            fats_g=data.get("fats", 0),
             source="Search"
         )
-        
-        # 3. Fire-and-forget Notion Sync (for Phase 2 async logic. For now, we still sync synchronously or skip entirely if preferred. We'll leave synchronous for now, but background tasks are better)
-        # Note: Removing synchronous notion write as requested by transition roadmap (Phase 1/2 decoupling Notion)
-        # We will ONLY write to DB here for instantaneous UX. 
         
         return {"ok": True}
     except Exception as e:

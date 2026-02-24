@@ -275,11 +275,11 @@
     const mealsData = {
         {% for meal in meals %}
     "{{ meal.id }}": {
-        name: "{{ meal.name }}",
-            kcal: parseInt("{{ meal.kcal }}", 10),
-                protein: parseFloat("{{ meal.protein_g }}"),
-                    carbs: parseFloat("{{ meal.carbs_g }}"),
-                        fats: parseFloat("{{ meal.fats_g }}")
+        name: { { meal.name | tojson } },
+        kcal: parseInt("{{ meal.kcal }}", 10),
+            protein: parseFloat("{{ meal.protein_g }}"),
+                carbs: parseFloat("{{ meal.carbs_g }}"),
+                    fats: parseFloat("{{ meal.fats_g }}")
     },
     {% endfor %}
     };

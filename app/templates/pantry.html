@@ -121,7 +121,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-text-main dark:text-text-bright text-sm">${item.name}</h3>
-                        <p class="text-xs text-text-muted">${item.kcal} kcal • ${item.protein}p / ${item.carbs}c / ${item.fats}f</p>
+                        <p class="text-xs text-text-muted">${item.kcal} kcal • ${item.protein_g}p / ${item.carbs_g}c / ${item.fats_g}f</p>
                     </div>
                 </div>
                 <button onclick='addFood(${JSON.stringify(item)})' class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
@@ -147,9 +147,9 @@
             const payload = {
                 name: item.name,
                 kcal: item.kcal,
-                protein: item.protein,
-                carbs: item.carbs,
-                fats: item.fats,
+                protein: item.protein_g,
+                carbs: item.carbs_g,
+                fats: item.fats_g,
                 date: document.getElementById('currentDate').value,
                 user_id: document.getElementById('currentUserId').value
             };

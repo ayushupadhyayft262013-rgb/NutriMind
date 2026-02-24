@@ -70,7 +70,7 @@ class Meal(SQLModel, table=True):
     telegram_user_id: int = Field(index=True)
     date: str = Field(index=True)  # YYYY-MM-DD format
     name: str
-    kcal: int = Field(default=0)
+    kcal: float = Field(default=0.0)
     protein_g: float = Field(default=0.0)
     carbs_g: float = Field(default=0.0)
     fats_g: float = Field(default=0.0)

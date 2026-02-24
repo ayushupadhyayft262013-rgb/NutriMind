@@ -65,7 +65,7 @@
     </form>
 
     <!-- Ambiance Toggle -->
-    <div class="bg-surface dark:bg-twilight-surface rounded-2xl p-4 flex items-center justify-between shadow-soft border border-white/40 dark:border-white/5 cursor-pointer hover:border-primary/50 transition-all"
+    <div class="bg-surface dark:bg-twilight-surface rounded-2xl p-4 flex items-center justify-between shadow-soft border border-white/40 dark:border-white/5 cursor-pointer hover:border-primary/50 transition-all mb-3"
         onclick="toggleTheme()">
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
@@ -82,6 +82,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Logout -->
+    <form action="/logout" method="POST">
+        <button type="submit"
+            class="w-full bg-surface dark:bg-twilight-surface rounded-2xl p-4 flex items-center gap-4 shadow-soft border border-white/40 dark:border-white/5 hover:border-red-400/50 transition-all group">
+            <div class="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">logout</span>
+            </div>
+            <div class="text-left">
+                <h4
+                    class="font-bold text-text-main dark:text-text-bright text-sm group-hover:text-red-500 transition-colors">
+                    Sign Out</h4>
+                <p class="text-xs text-text-muted">End your session</p>
+            </div>
+        </button>
+    </form>
 
 </div>
 {% endblock %}
