@@ -1,7 +1,7 @@
 """SQLModel database for user profile, preferences, meals and state management."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -36,7 +36,7 @@ class UserProfile(SQLModel, table=True):
     target_carbs: int = Field(default=0)
     target_fats: int = Field(default=0)
     onboarded: int = Field(default=0)  # Boolean modeled as int
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserPreference(SQLModel, table=True):
     __tablename__ = "user_preferences"

@@ -11,7 +11,7 @@ import sys
 # Add app to path so we can import our models and config
 sys.path.insert(0, os.path.abspath('.'))
 
-from app.database import Meal, UserProfile  # import to register them with SQLModel
+from app.database import Meal, UserProfile, UserPreference, TrackingState, PendingClarification  # import to register them with SQLModel
 from app.config import settings
 
 # this is the Alembic Config object, which provides

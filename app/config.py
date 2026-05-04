@@ -44,8 +44,6 @@ class Settings:
             missing.append("TELEGRAM_BOT_TOKEN")
         if not self.GEMINI_API_KEY:
             missing.append("GEMINI_API_KEY")
-        if not self.NOTION_API_KEY:
-            missing.append("NOTION_API_KEY")
         return missing
 
 

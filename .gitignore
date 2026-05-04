@@ -27,3 +27,10 @@ Thumbs.db
 data/
 scripts/*.txt
 scripts/*.json
+
+# SSL certificates (may contain private keys)
+certs/
+
+# Dev artifacts
+screenshots/
+stitch_screens/
